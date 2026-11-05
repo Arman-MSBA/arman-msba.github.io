@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Nutrition prediction with regularization | Arman Khachatryan</title>
+<meta name="description" content="A comparison of LASSO, Ridge and Elastic Net using shared cross-validation folds, careful missing-value handling and a held-out food-record evaluation.">
+<link rel="stylesheet" href="../../assets/style.css">
+</head>
+<body>
+<header class="site">
+  <div class="wrap">
+    <a class="name" href="../../index.html">Arman Khachatryan</a>
+    <p class="tagline">MSBA, Greater Boston</p>
+    <nav class="main">
+      <a href="../../index.html#work">Selected work</a>
+      <a href="../../index.html#experience">Experience</a>
+      <a href="../../index.html#skills">Skills</a>
+      <a href="../../index.html#contact">Contact</a>
+    </nav>
+  </div>
+</header>
+
+<main>
+  <a class="back" href="../../index.html">&larr; Back to home</a>
+  <p class="eyebrow">Machine learning &middot; Individual NEC coursework</p>
+  <h1>Nutrition prediction with regularization</h1>
+  <p class="lede">CV-selected LASSO: 14.47 kcal/100g held-out RMSE.</p>
+  <p>A comparison of LASSO, Ridge and Elastic Net using shared cross-validation folds, careful missing-value handling and a held-out food-record evaluation.</p>
+
+  <h2>Approach</h2>
+  <ul>
+    <li>Split 8,789 foods by food group into 7,022 development and 1,767 held-out records.</li>
+    <li>Used 33 numeric nutrient predictors plus food group, excluding IDs, names and portion weights.</li>
+    <li>Compared 1,111 alpha/lambda settings with five shared folds and fitting-fold imputation and missingness indicators.</li>
+    <li>Selected by cross-validation error, then reported test RMSE, MAE, R-squared and coefficient counts for all three techniques.</li>
+  </ul>
+
+  <h2>Results</h2>
+  <p>Selection used cross-validation. Test values describe held-out performance, in kcal/100g.</p>
+  <table>
+    <thead>
+      <tr>
+        <th>Technique</th>
+        <th class="num">CV RMSE</th>
+        <th class="num">Test RMSE</th>
+        <th>Role</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr class="best">
+        <td>LASSO</td>
+        <td class="num">11.9552</td>
+        <td class="num">14.4659</td>
+        <td>Selected by CV</td>
+      </tr>
+      <tr>
+        <td>Ridge</td>
+        <td class="num">12.0025</td>
+        <td class="num">14.3998</td>
+        <td>Comparison</td>
+      </tr>
+      <tr>
+        <td>Elastic Net</td>
+        <td class="num">11.9557</td>
+        <td class="num">14.4708</td>
+        <td>Comparison</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <figure>
+    <img src="../../assets/nutrition-test-rmse-comparison.png" alt="Bar chart comparing test RMSE across LASSO, Ridge and Elastic Net">
+    <figcaption>Test RMSE comparison across the three techniques.</figcaption>
+  </figure>
+  <figure>
+    <img src="../../assets/nutrition-prediction-diagnostics.png" alt="Prediction diagnostics chart for the nutrition model">
+    <figcaption>Prediction diagnostics for the held-out evaluation.</figcaption>
+  </figure>
+
+  <h2>What I learned</h2>
+  <p>The small test-error spread is less informative than the selection discipline. LASSO retained 63 of 88 design columns, and the near tie provides no basis for claiming a meaningful advantage for one penalty family.</p>
+
+  <h2>Limits</h2>
+  <p>These are saved internal food-record results, without a new model run. Similar formulations may occur in both partitions, so transfer to new product families remains untested. Total carbohydrate is absent from the export. Coefficients describe conditional associations, not causal nutrient effects or dietary recommendations; high aggregate fit still includes large individual errors.</p>
+
+  <h2>Next step</h2>
+  <p>Keep related food formulations in the same partition and test nonlinear effects to assess performance on genuinely different food groups or product families.</p>
+  <p><a href="../../index.html#work">More selected work</a></p>
+</main>
+
+<footer class="site">
+  <div class="wrap">
+    <p>Arman Khachatryan, MSBA &middot; Greater Boston</p>
+    <p>Analytics professional with 6+ years of experience across financial services, consumer goods, healthcare, and higher education.</p>
+    <p><a href="https://www.linkedin.com/in/arman-khachatryan-2022">LinkedIn</a> &middot; <a href="https://github.com/Arman-MSBA">GitHub</a> &middot; <a href="mailto:arman_khachatryan1@outlook.com">Email</a></p>
+  </div>
+</footer>
+</body>
+</html>

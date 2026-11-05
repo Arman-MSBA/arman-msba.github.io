@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>A fair classification comparison | Arman Khachatryan</title>
+<meta name="description" content="An academic Santander benchmark exercise comparing four classification models on anonymized course data with a shared training budget and identical evaluation rows.">
+<link rel="stylesheet" href="../../assets/style.css">
+</head>
+<body>
+<header class="site">
+  <div class="wrap">
+    <a class="name" href="../../index.html">Arman Khachatryan</a>
+    <p class="tagline">MSBA, Greater Boston</p>
+    <nav class="main">
+      <a href="../../index.html#work">Selected work</a>
+      <a href="../../index.html#experience">Experience</a>
+      <a href="../../index.html#skills">Skills</a>
+      <a href="../../index.html#contact">Contact</a>
+    </nav>
+  </div>
+</header>
+
+<main>
+  <a class="back" href="../../index.html">&larr; Back to home</a>
+  <p class="eyebrow">Machine learning &middot; Individual NEC coursework</p>
+  <h1>A fair classification comparison</h1>
+  <p class="lede">SVM test log loss: 0.2304. Recall at 0.5: 27.0%.</p>
+  <p>An academic Santander benchmark exercise comparing four classification models on anonymized course data with a shared training budget and identical evaluation rows.</p>
+  <p class="note">Independent NEC coursework on an anonymized competition dataset. This project is separate from my employment at Santander and was not deployed in bank systems.</p>
+
+  <h2>Approach</h2>
+  <ul>
+    <li>Used a stratified split with 6,000 common fitting customers and separate validation and test sets of 39,999 customers each.</li>
+    <li>Learned imputation and scaling from fitting rows, keeping test data outside preprocessing and calibration.</li>
+    <li>Compared held-out binary log loss and ROC AUC, then examined accuracy, precision and recall at a 0.50 cutoff.</li>
+    <li>Checked training-to-test loss and calibration to explain overconfidence and class-imbalance effects.</li>
+  </ul>
+
+  <h2>Results</h2>
+  <p>Log loss lower is better; test results on 39,999 customers. Accuracy and recall use a 0.5 threshold.</p>
+  <table>
+    <thead>
+      <tr>
+        <th>Model</th>
+        <th class="num">Log loss</th>
+        <th class="num">ROC AUC</th>
+        <th class="num">Accuracy</th>
+        <th class="num">Recall</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>Logistic regression</td>
+        <td class="num">0.2737</td>
+        <td class="num">0.7896</td>
+        <td class="num">90.37%</td>
+        <td class="num">17.79%</td>
+      </tr>
+      <tr class="best">
+        <td>Calibrated SVM</td>
+        <td class="num">0.2304</td>
+        <td class="num">0.8638</td>
+        <td class="num">91.36%</td>
+        <td class="num">26.97%</td>
+      </tr>
+      <tr>
+        <td>Random forest</td>
+        <td class="num">0.2859</td>
+        <td class="num">0.7693</td>
+        <td class="num">89.95%</td>
+        <td class="num">0.00%</td>
+      </tr>
+      <tr>
+        <td>XGBoost</td>
+        <td class="num">0.3436</td>
+        <td class="num">0.8234</td>
+        <td class="num">90.54%</td>
+        <td class="num">8.31%</td>
+      </tr>
+    </tbody>
+  </table>
+  <p>Random forest&rsquo;s 89.95% accuracy coincides with zero recall at this threshold. A single accuracy score is not enough.</p>
+
+  <figure>
+    <img src="../../assets/santander-log-loss-comparison.png" alt="Bar chart comparing test log loss across the four classification models">
+    <figcaption>Test log loss comparison across the four models.</figcaption>
+  </figure>
+  <figure>
+    <img src="../../assets/santander-roc.png" alt="ROC curves for the four classification models">
+    <figcaption>ROC curves for the four models on held-out data.</figcaption>
+  </figure>
+
+  <h2>What I learned</h2>
+  <p>The always-negative baseline already achieves 89.95% accuracy. The comparison makes the practical tradeoff visible: a model can look accurate while missing most positive cases, so probability quality and recall belong beside the headline score.</p>
+
+  <h2>Limits</h2>
+  <p>These are saved results from an internal course-data comparison. Prior experiments informed the frozen specifications, and only the SVM was recalibrated. The 6,000-row fitting budget limits the comparison. Anonymized features cannot be explained as specific customer behaviors, and no financial savings or deployment performance is claimed. Models were not retrained during portfolio preparation.</p>
+
+  <h2>Next step</h2>
+  <p>Choose a decision threshold using explicit costs for missed positives and false alarms, then evaluate calibration and performance on fresh data with equivalent tuning budgets.</p>
+  <p><a href="../../index.html#work">More selected work</a></p>
+</main>
+
+<footer class="site">
+  <div class="wrap">
+    <p>Arman Khachatryan, MSBA &middot; Greater Boston</p>
+    <p>Analytics professional with 6+ years of experience across financial services, consumer goods, healthcare, and higher education.</p>
+    <p><a href="https://www.linkedin.com/in/arman-khachatryan-2022">LinkedIn</a> &middot; <a href="https://github.com/Arman-MSBA">GitHub</a> &middot; <a href="mailto:arman_khachatryan1@outlook.com">Email</a></p>
+  </div>
+</footer>
+</body>
+</html>

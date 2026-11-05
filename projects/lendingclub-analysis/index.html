@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Six years of lending patterns | Arman Khachatryan</title>
+<meta name="description" content="A descriptive R analysis combining 2012-2017 loan files with geographic lookups to explore loan grades, rates, borrower characteristics and regional patterns.">
+<link rel="stylesheet" href="../../assets/style.css">
+</head>
+<body>
+<header class="site">
+  <div class="wrap">
+    <a class="name" href="../../index.html">Arman Khachatryan</a>
+    <p class="tagline">MSBA, Greater Boston</p>
+    <nav class="main">
+      <a href="../../index.html#work">Selected work</a>
+      <a href="../../index.html#experience">Experience</a>
+      <a href="../../index.html#skills">Skills</a>
+      <a href="../../index.html#contact">Contact</a>
+    </nav>
+  </div>
+</header>
+
+<main>
+  <a class="back" href="../../index.html">&larr; Back to home</a>
+  <p class="eyebrow">Data analysis &middot; Individual NEC coursework</p>
+  <h1>Six years of lending patterns</h1>
+  <p class="lede">Six annual files joined into a repeatable financial analysis.</p>
+  <p>A descriptive R analysis combining 2012&ndash;2017 loan files with geographic lookups to explore loan grades, rates, borrower characteristics and regional patterns.</p>
+
+  <h2>Approach</h2>
+  <ul>
+    <li>Stacked six annual loan files with explicit column definitions and consistent types.</li>
+    <li>Joined state and regional lookup tables for geographic summaries.</li>
+    <li>Compared loan grades and interest rates, income and loan amounts, and employment patterns.</li>
+    <li>Created state-level choropleth maps and regional views using grouped R summaries.</li>
+  </ul>
+
+  <figure>
+    <img src="../../assets/lendingclub-state-map.png" alt="State-level choropleth map of lending patterns">
+    <figcaption>State-level view of lending patterns.</figcaption>
+  </figure>
+  <figure>
+    <img src="../../assets/lendingclub-grade-rates.png" alt="Chart comparing loan grades and interest rates">
+    <figcaption>Loan grades and interest rates compared.</figcaption>
+  </figure>
+
+  <h2>What I learned</h2>
+  <p>Geographic comparisons need the measure and sample context attached. Average loan size describes the supplied loans; it does not establish a state&rsquo;s credit quality or explain why the pattern exists.</p>
+
+  <h2>Limits</h2>
+  <p>This is descriptive, observational coursework. The figures are existing rendered outputs, and the underlying computation was not rerun for the portfolio. The public package excludes borrower-level records. No causal effect, future credit performance, predictive accuracy or financial impact is claimed.</p>
+
+  <h2>Next step</h2>
+  <p>Add sample-size and coverage checks to each geographic comparison, then examine whether the patterns remain after accounting for loan year and borrower mix.</p>
+  <p><a href="../../index.html#work">More selected work</a></p>
+</main>
+
+<footer class="site">
+  <div class="wrap">
+    <p>Arman Khachatryan, MSBA &middot; Greater Boston</p>
+    <p>Analytics professional with 6+ years of experience across financial services, consumer goods, healthcare, and higher education.</p>
+    <p><a href="https://www.linkedin.com/in/arman-khachatryan-2022">LinkedIn</a> &middot; <a href="https://github.com/Arman-MSBA">GitHub</a> &middot; <a href="mailto:arman_khachatryan1@outlook.com">Email</a></p>
+  </div>
+</footer>
+</body>
+</html>
