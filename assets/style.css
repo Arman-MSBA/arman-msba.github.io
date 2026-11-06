@@ -91,13 +91,15 @@ nav.toc a {
 }
 nav.toc a::before {
   content: "";
-  width: 2rem;
+  width: 4rem;
   height: 1px;
   background: currentColor;
-  transition: width 0.2s;
+  transform: scaleX(0.5);
+  transform-origin: left;
+  transition: transform 0.2s;
 }
 nav.toc a:hover, nav.toc a.active { color: var(--text-strong); }
-nav.toc a:hover::before, nav.toc a.active::before { width: 4rem; }
+nav.toc a:hover::before, nav.toc a.active::before { transform: none; }
 
 .socials { display: flex; align-items: center; gap: 1.25rem; list-style: none; margin: 2rem 0 0; padding: 0; }
 .socials a { display: block; color: var(--muted); transition: color 0.2s; }
@@ -317,8 +319,8 @@ main.case { padding-top: 2.5rem; padding-bottom: 5rem; }
 
 .note {
   padding: 1rem 1.25rem;
-  border-left: 2px solid var(--accent);
-  border-radius: 0 var(--radius) var(--radius) 0;
+  border: 1px solid rgba(242, 181, 68, 0.25);
+  border-radius: var(--radius);
   background: var(--accent-bg);
   font-size: 0.9375rem;
 }
