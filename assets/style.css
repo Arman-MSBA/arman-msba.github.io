@@ -314,7 +314,7 @@ nav.main a.cta:hover { background: var(--accent); }
 }
 .thumb img { width: 100%; height: 100%; object-fit: cover; transition: scale 0.7s var(--ease); }
 .work:hover .thumb img { scale: 1.04; }
-.thumb.zoom img { object-position: 50% 35%; transform: scale(1.55); transform-origin: 49% 38%; }
+.thumb.top img { object-position: top; }
 
 .work-body { display: flex; flex-direction: column; flex: 1; padding: 1.35rem 0.75rem 0.6rem; }
 .meta { margin-bottom: 0.6rem; font-family: var(--mono); font-size: 0.75rem; color: var(--muted); }
@@ -633,6 +633,16 @@ figure { margin: 2.25rem 0; }
 }
 .case figure img { width: 100%; border-radius: var(--radius-sm); }
 figcaption { padding: 0.8rem 0.25rem 0.1rem; font-family: var(--mono); font-size: 0.75rem; color: var(--muted); }
+figcaption a { color: var(--accent); white-space: nowrap; }
+
+/* Live Tableau Public workbooks: a linked still on smaller screens, the interactive
+   view once the window is wide enough for the fixed-size dashboard (--w x --h). */
+.viz-live { display: none; width: var(--w); height: var(--h); border: 0; border-radius: var(--radius-sm); background: #fff; }
+@media (min-width: 1300px) {
+  .case figure.viz { width: calc(var(--w) + 1.5rem); margin-left: calc(50% - (var(--w) + 1.5rem) / 2); }
+  .viz-still { display: none; }
+  .viz-live { display: block; }
+}
 
 table { width: 100%; margin: 1.5rem 0; border-collapse: collapse; font-size: 0.9375rem; }
 th {

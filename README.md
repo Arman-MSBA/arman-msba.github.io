@@ -29,6 +29,6 @@ A static portfolio site for Arman Khachatryan: Analytics, Business Intelligence 
 
 ## Notes
 
-- The two Tableau workbook files (retail-performance.twbx and retail-analytics.twbx) return 404 on the old host too, so the download buttons were removed from the retail page. If you still have the .twbx files, drop them into `assets/` and re-add download links pointing at `../../assets/retail-performance.twbx` and `../../assets/retail-analytics.twbx`.
+- The two Tableau workbooks are published on Tableau Public (profile `arman.khachatryan3803`). The retail page embeds them on wide screens and shows Tableau's own preview image, linked to Tableau Public, on smaller ones. The homepage thumbnail also uses that preview image.
 - Copy rule: no em dashes anywhere in the site copy. Use commas, colons, or restructured sentences instead.
 - No new facts, projects, or metrics were invented. All words and numbers come from the previous site.
