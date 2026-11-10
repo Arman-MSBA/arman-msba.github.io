@@ -155,6 +155,17 @@ h1{font-size:22px;margin:0 0 12px;font-weight:800;letter-spacing:-.01em}
 @media(max-width:720px){.basket{position:static;box-shadow:none}}
 .note{font-size:12.5px;color:var(--muted);font-weight:600;margin-top:6px;line-height:1.35}
 .empty{text-align:center;color:var(--muted);padding:32px 10px;font-size:15px}
+.pager{display:flex;flex-wrap:wrap;gap:6px;align-items:center;justify-content:center;margin:10px 0}
+.pager .pg{min-width:40px;min-height:40px;border:1px solid var(--line);background:var(--panel);color:var(--ink);border-radius:10px;font-size:14px;font-weight:800;cursor:pointer;font-family:inherit;padding:6px 10px}
+.pager .pg.on{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.pager .pg:disabled{opacity:.35;cursor:default}
+.pager .pgdots{color:var(--muted);font-weight:800}
+.pager .pginfo{font-size:13px;font-weight:700;color:var(--muted);width:100%;text-align:center}
+.pager-top{margin:0 0 4px}
+.pager-top .pg{min-height:34px;font-size:13px}
+.sharebtn{margin-left:6px;min-height:44px;border-radius:999px;border:1px solid var(--line);background:var(--panel);color:var(--ink);font-size:13px;font-weight:800;cursor:pointer;font-family:inherit;padding:8px 14px;white-space:nowrap}
+.mbtn.on-like{background:#0d5c2a;border-color:#0d5c2a;box-shadow:inset 0 0 0 2px rgba(255,255,255,.85)}
+.mbtn.on-removed{background:#8f1d15;border-color:#8f1d15;box-shadow:inset 0 0 0 2px rgba(255,255,255,.85)}
 .toast{position:fixed;left:50%;transform:translateX(-50%);bottom:92px;background:var(--ink);color:var(--bg);padding:10px 16px;border-radius:10px;font-size:14px;font-weight:700;opacity:0;pointer-events:none;transition:opacity .2s;z-index:50;max-width:92vw;text-align:center}
 .toast.show{opacity:1}
 
@@ -193,6 +204,7 @@ h1{font-size:22px;margin:0 0 12px;font-weight:800;letter-spacing:-.01em}
     <label class="fwrap"><span class="flab">Պահանջարկ</span><select id="selDemand" aria-label="Պահանջարկ"></select></label>
     <label class="fwrap"><span class="flab">Դասավորել</span><select id="selSort" aria-label="Դասավորել"><option value="profit">Շահույթ</option><option value="us">Գին</option><option value="name">Անուն</option></select></label>
     <button class="undobtnM" id="undoBtnM" type="button" disabled>↩ Հետարկել</button>
+    <button class="undobtnM" id="shareBtnM" type="button">🔗 Կիսվել ընտրությամբ</button>
   </div>
 
   <div class="bar" id="markPills">
@@ -201,6 +213,7 @@ h1{font-size:22px;margin:0 0 12px;font-weight:800;letter-spacing:-.01em}
     <button class="pill" data-markf="later" type="button">Հետո <span class="cnt" id="cntLater">0</span></button>
     <button class="pill" data-markf="removed" type="button">Հեռացրած <span class="cnt" id="cntRem">0</span></button>
     <button class="undobtn" id="undoBtn" type="button" disabled aria-label="Հետարկել վերջինը" title="Հետարկել վերջինը">↩</button>
+    <button class="sharebtn" id="shareBtn" type="button" title="Կիսվել ընտրությամբ">🔗 Կիսվել</button>
   </div>
 
   <div class="bar" id="demandPills">
@@ -218,7 +231,9 @@ h1{font-size:22px;margin:0 0 12px;font-weight:800;letter-spacing:-.01em}
     <button class="pill" data-sort="name" type="button">Անուն</button>
   </div>
 
+  <div class="pager pager-top" id="pagerTop"></div>
   <div class="list" id="list"></div>
+  <div class="pager" id="pager"></div>
   </div>
   </div>
 </div>
@@ -400,8 +415,52 @@ function loadMarks(){
 }
 function saveMarks(){
   try{ localStorage.setItem(MARKS_KEY, JSON.stringify(marks)); }catch(e){}
+  syncHash();
+}
+function encodeMarks(){
+  var parts=[];
+  ["like","later","removed"].forEach(function(m){
+    var ids=Object.keys(marks).filter(function(id){ return marks[id]===m; });
+    if(ids.length) parts.push(m+":"+ids.join(","));
+  });
+  return parts.length ? "#m="+parts.join(";") : "";
+}
+function decodeMarksHash(){
+  try{
+    var h=(location.hash||"").replace(/^#/,"");
+    var m=h.match(/(?:^|&)m=([^&]*)/); if(!m) return {};
+    var out={};
+    decodeURIComponent(m[1]).split(";").forEach(function(seg){
+      var kv=seg.split(":");
+      if(kv.length!==2) return;
+      if(kv[0]!=="like"&&kv[0]!=="later"&&kv[0]!=="removed") return;
+      kv[1].split(",").forEach(function(id){ if(id) out[id]=kv[0]; });
+    });
+    return out;
+  }catch(e){ return {}; }
+}
+function syncHash(){
+  try{
+    var h=encodeMarks();
+    history.replaceState(null,"",location.pathname+location.search+h);
+  }catch(e){}
+}
+var QTY_KEY = "armenia-resale-qty-v1";
+function saveQty(){ try{ localStorage.setItem(QTY_KEY, JSON.stringify(qty)); }catch(e){} }
+function loadQty(){
+  try{
+    var o=JSON.parse(localStorage.getItem(QTY_KEY)||"{}");
+    if(o && typeof o==="object") Object.keys(o).forEach(function(id){ if(typeof o[id]==="number" && o[id]>=0) qty[id]=o[id]; });
+  }catch(e){}
 }
 var marks = loadMarks();
+(function(){
+  var hm=decodeMarksHash(), changed=false;
+  Object.keys(hm).forEach(function(id){
+    if(PRODUCTS.some(function(p){ return p.id===id; }) && marks[id]!==hm[id]){ marks[id]=hm[id]; changed=true; }
+  });
+  if(changed) saveMarks(); else syncHash();
+})();
 var undoStack = [];
 PRODUCTS.forEach(function(p){ qty[p.id]=0; });
 qty["hrm200"]=2; qty["hrm600"]=1; qty["avent17"]=1;
@@ -409,7 +468,9 @@ qty["beatspro"]=2; qty["psportal"]=1; qty["instax13"]=2; qty["instaxevo"]=1; qty
 qty["airpods4nc"]=2; qty["nblysine"]=2; qty["solgarcmz"]=2; qty["instaxse"]=1;
 qty["natrolD3"]=2; qty["solgarZinc"]=2; qty["solgarIron"]=2; qty["solgarMgCitrate"]=1; qty["solgarVitC"]=1; qty["solgarCaMgD3"]=2; qty["solgarVitA"]=2; qty["solgarK2"]=2; qty["solgarSelenium"]=2; qty["solgarOmega369"]=1; qty["natrolB12"]=2;
 qty["vsmistlove"]=5;
-var state = {sort:"profit", markf:"all", cat:"all", demand:"all"};
+loadQty();
+var PAGE_SIZE = 20;
+var state = {sort:"profit", markf:"all", cat:"all", demand:"all", page:1};
 
 function taxPrice(p){ return p.usPrice*TAX; }
 function armUSD(p){ return p.armAMD/RATE; }
@@ -459,6 +520,7 @@ function setMark(id, m){
   if(cur === m) delete marks[id]; else marks[id] = m;
   saveMarks();
   syncUndoBtn();
+  showToast("Պահպանված է");
   render();
 }
 function undoLast(){
@@ -467,6 +529,7 @@ function undoLast(){
   if(last.prev) marks[last.id] = last.prev; else delete marks[last.id];
   saveMarks();
   syncUndoBtn();
+  showToast("Պահպանված է");
   render();
 }
 
@@ -503,7 +566,7 @@ function render(){
     catHtml += '<button type="button" class="catbtn'+(state.cat===k?" on":"")+'" data-cat="'+k+'"><span>'+(CATS[k]||k)+'</span><span class="cnt">'+catCounts[k]+'</span></button>';
   });
   document.getElementById("catList").innerHTML = catHtml;
-  document.querySelectorAll("[data-cat]").forEach(function(b){ b.addEventListener("click", function(){ state.cat = b.getAttribute("data-cat"); render(); }); });
+  document.querySelectorAll("[data-cat]").forEach(function(b){ b.addEventListener("click", function(){ state.cat = b.getAttribute("data-cat"); state.page=1; render(); }); });
 
   var list = PRODUCTS.filter(function(p){
     if(state.cat!=="all" && p.cat!==state.cat) return false;
@@ -518,10 +581,15 @@ function render(){
     if(state.sort==="us") return taxPrice(a)-taxPrice(b);
     return a.name.localeCompare(b.name);
   });
+  var totalPages = Math.max(1, Math.ceil(list.length / PAGE_SIZE));
+  if(state.page>totalPages) state.page=1;
+  if(state.page<1) state.page=1;
+  var startIdx=(state.page-1)*PAGE_SIZE;
+  var pageItems=list.slice(startIdx, startIdx+PAGE_SIZE);
 
   var html = "";
   if(!list.length){ html = '<div class="empty">'+emptyMsg()+'</div>'; }
-  list.forEach(function(p){
+  pageItems.forEach(function(p){
     var pr = profit(p), tp = taxPrice(p), prA = profitAMD(p);
     var mk = marks[p.id] || null;
     var usBtn = p.usLink ? '<a class="us" href="'+p.usLink+'" target="_blank" rel="noopener">ԱՄՆ ↗</a>' : '<span class="nolink">Հղում չկա</span>';
@@ -542,9 +610,9 @@ function render(){
       + (p.note ? '<div class="note">'+p.note+'</div>' : '')
       + '<div class="links">'+usBtn+armBtn+'</div>'
       + '<div class="actions">'
-      + '<button type="button" class="mbtn btn-like'+(mk==="like"?" on-like":"")+'" data-mark="like" data-id="'+p.id+'">✓ Հավանել</button>'
-      + '<button type="button" class="mbtn'+(mk==="later"?" on-later":"")+'" data-mark="later" data-id="'+p.id+'">Հետո</button>'
-      + '<button type="button" class="mbtn btn-remove'+(mk==="removed"?" on-removed":"")+'" data-mark="removed" data-id="'+p.id+'">✕ Հեռացնել</button>'
+      + '<button type="button" class="mbtn btn-like'+(mk==="like"?" on-like":"")+'" data-mark="like" data-id="'+p.id+'">'+(mk==="like"?"✓ Հավանված":"Հավանել")+'</button>'
+      + '<button type="button" class="mbtn'+(mk==="later"?" on-later":"")+'" data-mark="later" data-id="'+p.id+'">'+(mk==="later"?"✓ Հետո":"Հետո")+'</button>'
+      + '<button type="button" class="mbtn btn-remove'+(mk==="removed"?" on-removed":"")+'" data-mark="removed" data-id="'+p.id+'">'+(mk==="removed"?"✕ Հեռացված":"Հեռացնել")+'</button>'
       + '<span class="qty"><button type="button" data-dec="'+p.id+'" aria-label="Հանել մեկ հատ">−</button><span class="n" id="n-'+p.id+'">'+qty[p.id]+'</span><button type="button" data-inc="'+p.id+'" aria-label="Ավելացնել մեկ հատ">+</button></span>'
       + '</div></article>';
   });
@@ -560,6 +628,48 @@ function render(){
   document.querySelectorAll("[data-mark]").forEach(function(b){ b.addEventListener("click", function(){ setMark(b.getAttribute("data-id"), b.getAttribute("data-mark")); }); });
   document.querySelectorAll("[data-proof]").forEach(function(b){ b.addEventListener("click", function(){ openProof(b.getAttribute("data-proof")); }); });
   syncQty();
+  renderPager(totalPages, list.length, startIdx);
+}
+
+function pagerHtml(totalPages){
+  var p=state.page, out='<button type="button" class="pg" data-page="prev"'+(p<=1?' disabled':'')+'>‹ Նախորդ</button>';
+  var win=[]; for(var i=1;i<=totalPages;i++){ if(i===1||i===totalPages||Math.abs(i-p)<=1) win.push(i); }
+  var prevN=0;
+  win.forEach(function(n){
+    if(prevN&&n-prevN>1) out+='<span class="pgdots">…</span>';
+    out+='<button type="button" class="pg'+(n===p?' on':'')+'" data-page="'+n+'">'+n+'</button>';
+    prevN=n;
+  });
+  out+='<button type="button" class="pg" data-page="next"'+(p>=totalPages?' disabled':'')+'>Հաջորդ ›</button>';
+  return out;
+}
+function renderPager(totalPages, total, startIdx){
+  var top=document.getElementById("pagerTop"), bot=document.getElementById("pager");
+  if(!top||!bot) return;
+  if(total<=PAGE_SIZE){ top.innerHTML=""; bot.innerHTML=""; return; }
+  top.innerHTML='<button type="button" class="pg" data-page="prev"'+(state.page<=1?' disabled':'')+'>‹ Նախ</button><span class="pginfo" style="width:auto">Էջ '+state.page+' / '+totalPages+'</span><button type="button" class="pg" data-page="next"'+(state.page>=totalPages?' disabled':'')+'>Հաջ ›</button>';
+  bot.innerHTML=pagerHtml(totalPages)+'<span class="pginfo">Էջ '+state.page+' / '+totalPages+' · '+total+' ապրանքից '+(startIdx+1)+'–'+Math.min(startIdx+PAGE_SIZE,total)+'</span>';
+  document.querySelectorAll("[data-page]").forEach(function(b){ b.addEventListener("click", function(){
+    var v=b.getAttribute("data-page");
+    if(v==="prev") state.page=Math.max(1,state.page-1);
+    else if(v==="next") state.page=Math.min(totalPages,state.page+1);
+    else state.page=parseInt(v,10)||1;
+    render();
+    var l=document.getElementById("list"); if(l) l.scrollIntoView({block:"start"});
+  }); });
+}
+function fallbackCopy(text){
+  try{
+    var ta=document.createElement("textarea"); ta.value=text; ta.style.position="fixed"; ta.style.opacity="0";
+    document.body.appendChild(ta); ta.select(); document.execCommand("copy"); document.body.removeChild(ta);
+  }catch(e){ window.prompt("Պատճենեք հղումը՝", text); }
+}
+function shareMarks(){
+  syncHash();
+  var url=location.href;
+  function done(){ showToast("Հղումը պատճենված է ✓"); }
+  if(navigator.clipboard && navigator.clipboard.writeText){ navigator.clipboard.writeText(url).then(done, function(){ fallbackCopy(url); done(); }); }
+  else { fallbackCopy(url); done(); }
 }
 
 function syncQty(){
@@ -574,35 +684,38 @@ function syncQty(){
   document.getElementById("bCostUsd").textContent = money0(cost);
   document.getElementById("bProfit").textContent = amd0(profA);
   document.getElementById("bProfitUsd").textContent = money0(prof);
+  saveQty();
 }
 
 document.getElementById("markPills").addEventListener("click", function(e){
   var btn = e.target.closest ? e.target.closest("button") : null;
   if(!btn) return;
-  state.markf = btn.getAttribute("data-markf");
+  state.markf = btn.getAttribute("data-markf"); state.page=1;
   this.querySelectorAll(".pill").forEach(function(x){ x.classList.toggle("on", x===btn); });
   render();
 });
 document.getElementById("sortPills").addEventListener("click", function(e){
   var btn = e.target.closest ? e.target.closest("button") : null;
   if(!btn) return;
-  state.sort = btn.getAttribute("data-sort");
+  state.sort = btn.getAttribute("data-sort"); state.page=1;
   this.querySelectorAll(".pill").forEach(function(x){ x.classList.toggle("on", x===btn); });
   render();
 });
 document.getElementById("demandPills").addEventListener("click", function(e){
   var btn = e.target.closest ? e.target.closest("button") : null;
   if(!btn) return;
-  state.demand = btn.getAttribute("data-demand");
+  state.demand = btn.getAttribute("data-demand"); state.page=1;
   this.querySelectorAll(".pill").forEach(function(x){ x.classList.toggle("on", x===btn); });
   render();
 });
 document.getElementById("undoBtn").addEventListener("click", undoLast);
 document.getElementById("undoBtnM").addEventListener("click", undoLast);
-document.getElementById("selCat").addEventListener("change", function(){ state.cat = this.value; render(); });
-document.getElementById("selMark").addEventListener("change", function(){ state.markf = this.value; render(); });
-document.getElementById("selDemand").addEventListener("change", function(){ state.demand = this.value; render(); });
-document.getElementById("selSort").addEventListener("change", function(){ state.sort = this.value; render(); });
+document.getElementById("selCat").addEventListener("change", function(){ state.cat = this.value; state.page=1; render(); });
+document.getElementById("selMark").addEventListener("change", function(){ state.markf = this.value; state.page=1; render(); });
+document.getElementById("selDemand").addEventListener("change", function(){ state.demand = this.value; state.page=1; render(); });
+document.getElementById("selSort").addEventListener("change", function(){ state.sort = this.value; state.page=1; render(); });
+document.getElementById("shareBtn").addEventListener("click", shareMarks);
+document.getElementById("shareBtnM").addEventListener("click", shareMarks);
 
 
 function escHtml(s){ return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;"); }
