@@ -396,8 +396,8 @@ function render(){
   list.forEach(function(p){
     var pr = profit(p), tp = taxPrice(p), prA = profitAMD(p);
     var mk = marks[p.id] || null;
-    var usBtn = p.usLink ? '<a class="us" href="'+p.usLink+'" target="_blank" rel="noopener">'+p.usStore+' ↗</a>' : '<span class="nolink">Հղում չկա</span>';
-    var armBtn = p.armLink ? '<a href="'+p.armLink+'" target="_blank" rel="noopener">'+p.armStore+' ↗</a>' : '<span class="nolink">Հղում չկա</span>';
+    var usBtn = p.usLink ? '<a class="us" href="'+p.usLink+'" target="_blank" rel="noopener">ԱՄՆ ↗</a>' : '<span class="nolink">Հղում չկա</span>';
+    var armBtn = p.armLink ? '<a href="'+p.armLink+'" target="_blank" rel="noopener">Հայաստան ↗</a>' : '<span class="nolink">Հղում չկա</span>';
     html += '<article class="row'+(mk==="removed"?' removed':'')+'">'
       + '<div class="top"><img class="thumb" src="assets/'+IMG[p.id]+'" alt="'+p.name+'"><div class="main">'
       + '<h2 class="name">'+p.name+'</h2>'
