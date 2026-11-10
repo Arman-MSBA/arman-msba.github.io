@@ -481,15 +481,14 @@ var marks = loadMarks();
 })();
 /* ---- Shared cloud selections: Google Sheet "Selections" tab ----
    Read: public CSV of the sheet (anyone-with-link reader), fetched on load.
-   Write: Google Form (anonymous) - NOT connected yet. Until the form is
-   wired, CLOUD_FORM_URL stays empty and saves stay local + URL hash.
-   Once Google Forms is connected, set CLOUD_FORM_URL to the formResponse
-   URL and CLOUD_FORM_ENTRIES to the entry IDs for product_id, mark,
-   quantity, updated_by, updated_at; every mark/qty change will also POST
-   there, and a sync job copies form responses into the Selections tab. */
+   Write: Google Form (anonymous) - CONNECTED 2026-11-10. Form
+   "Armenia resale selections" (formId 1b22es5awozqvXlkDCC2PJf1PzxY7rYlEfdQWBphh8T0),
+   CLOUD_FORM_URL is its formResponse URL and CLOUD_FORM_ENTRIES are its
+   question IDs; every mark/qty change POSTs there, and a sync job copies
+   form responses into the Selections tab. */
 var CLOUD_CSV_URL = "https://docs.google.com/spreadsheets/d/1TXrnkSOg5wRnvJecEKQ6MD2VIrVA-e2rpPNud3tMlbQ/gviz/tq?tqx=out:csv&sheet=Selections";
-var CLOUD_FORM_URL = "";
-var CLOUD_FORM_ENTRIES = {};
+var CLOUD_FORM_URL = "https://docs.google.com/forms/d/e/1FAIpQLSfoRoaciSIRPjQYNB_W3kYTAGX_z5OYa0sKOuO3Lqj6AhhXOw/formResponse";
+var CLOUD_FORM_ENTRIES = {"product_id":"955794561","mark":"298503252","quantity":"547869026","updated_by":"1723808883","updated_at":"1529235470"}; /* numeric entry IDs from the form's public HTML; the API questionIds are different and do NOT work for formResponse POSTs */
 var cloudLoaded = false;
 function setCloudStatus(txt){ var el=document.getElementById("cloudStatus"); if(el) el.textContent=txt; }
 function parseCloudCSV(text){
