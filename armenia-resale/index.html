@@ -102,21 +102,31 @@ h1{font-size:22px;margin:0 0 12px;font-weight:800;letter-spacing:-.01em}
 .qty button{width:44px;height:48px;border-radius:10px;border:1px solid var(--line);background:var(--panel);color:var(--ink);font-size:19px;font-weight:800;cursor:pointer;font-family:inherit}
 .qty .n{font-family:"IBM Plex Mono",monospace;font-size:16px;font-weight:700;min-width:24px;text-align:center}
 @media(max-width:640px){
-  .wrap{padding:12px 10px 24px}
-  h1{font-size:20px}
-  .totals{display:grid;grid-template-columns:1fr;gap:8px}
-  .tcell{min-width:0;justify-content:space-between}
-  .tcell .tl{flex-shrink:1}
-  .tcell .tv{white-space:nowrap}
-  .catlist{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px}
-  .catbtn{flex:none;width:100%;min-width:0}
-  .bar{min-width:0;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;align-items:stretch}
-  .pill{max-width:100%;width:100%;display:flex;align-items:center;justify-content:center;gap:6px;font-size:13.5px;padding:10px 6px;white-space:nowrap}
-  .sortlab{grid-column:1/-1;margin:4px 0 0;font-size:12px}
-  #sortPills{grid-template-columns:repeat(3,minmax(0,1fr))}
-  .undobtn{grid-column:1/-1;width:auto;margin-left:0;border-radius:10px;min-height:44px}
-  .undobtn::after{content:"Հետարկել";font-size:13px;font-weight:800;margin-left:6px}
+  /* Compact mobile top: first product should appear within ~1 screen */
+  .wrap{padding:8px 10px 24px}
+  h1{font-size:17px;margin:0 0 6px}
+  /* Category: flat single-row swipeable chip strip, no big card */
+  .catpanel{width:100%;position:static;background:transparent;border:0;box-shadow:none;padding:0;margin:0 0 6px;border-radius:0}
+  .catpanel h2{display:none}
+  .catlist{display:flex;flex-direction:row;flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none;-webkit-overflow-scrolling:touch;gap:6px;padding-bottom:2px}
+  .catlist::-webkit-scrollbar{display:none}
+  .catbtn{flex:0 0 auto;width:auto;min-width:0;min-height:34px;padding:7px 11px;font-size:12.5px;border:1px solid var(--line);background:var(--panel);border-radius:999px;white-space:nowrap}
+  .catbtn .cnt{font-size:12px}
+  /* Totals: one compact 3-across strip, label over value */
+  .totals{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px;margin:0 0 8px}
+  .tcell{flex-direction:column;align-items:flex-start;gap:1px;padding:7px 8px;border-radius:10px;min-width:0;justify-content:flex-start}
+  .tcell .tl{font-size:10.5px;flex-shrink:1}
+  .tcell .tv{font-size:13.5px;white-space:nowrap}
+  /* Filter bars: single-row swipeable chip strips, small pills */
+  .content{width:100%;min-width:0}
+  .bar{display:flex;flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none;-webkit-overflow-scrolling:touch;gap:6px;align-items:center;margin-bottom:6px;padding-bottom:2px;min-width:0}
+  .bar::-webkit-scrollbar{display:none}
+  .pill{flex:0 0 auto;max-width:none;width:auto;display:inline-flex;align-items:center;justify-content:center;gap:6px;font-size:12.5px;padding:7px 11px;min-height:34px;white-space:nowrap}
+  .sortlab{flex:0 0 auto;grid-column:auto;margin:0;font-size:12px;align-self:center}
+  .undobtn{flex:0 0 auto;grid-column:auto;width:34px;height:34px;min-height:34px;margin-left:0;border-radius:999px}
+  .undobtn::after{content:"";margin-left:0}
   .undobtn:disabled{display:none}
+  .list{margin-top:6px;gap:6px}
   .row{min-width:0}
   .top{flex-wrap:wrap}
   .name{overflow-wrap:break-word}
