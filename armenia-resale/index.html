@@ -1,0 +1,461 @@
+<!doctype html>
+<html lang="hy">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="color-scheme" content="light dark">
+<link rel="icon" href="data:,">
+<title>Հայաստանում վերավաճառք</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@600;700;800&family=Noto+Sans+Armenian:wght@600;700;800&family=IBM+Plex+Mono:wght@600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#f4f5f2; --panel:#ffffff; --panel2:#eef0ea; --ink:#17201a; --muted:#5c6a60;
+  --line:#dde2d8; --green:#177245; --green-bg:#e3f2e7; --red:#b3372c; --red-bg:#fbe9e6;
+  --blue:#1d5fa8; --blue-bg:#e6effa; --shadow:0 1px 3px rgba(20,30,20,.08);
+}
+@media (prefers-color-scheme: dark){
+  :root{
+    --bg:#121613; --panel:#1b211c; --panel2:#232a24; --ink:#e8ede8; --muted:#9fb0a2;
+    --line:#2e3830; --green:#4cc07e; --green-bg:#173325; --red:#f08a7d; --red-bg:#3a201c;
+    --blue:#7db3ec; --blue-bg:#1c2c42; --shadow:0 1px 3px rgba(0,0,0,.4);
+  }
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:"Manrope","Noto Sans Armenian",system-ui,sans-serif;-webkit-font-smoothing:antialiased}
+a{color:var(--blue)}
+.wrap{max-width:1080px;margin:0 auto;padding:16px 14px 260px}
+.mono{font-family:"IBM Plex Mono",monospace}
+h1{font-size:22px;margin:0 0 12px;font-weight:800;letter-spacing:-.01em}
+.totals{display:flex;flex-wrap:wrap;gap:8px;margin:0 0 12px}
+.tcell{background:var(--panel);border:1px solid var(--line);border-radius:12px;box-shadow:var(--shadow);padding:9px 14px;display:flex;align-items:baseline;gap:10px}
+.tcell .tl{font-size:12.5px;font-weight:800;letter-spacing:.04em;color:var(--muted)}
+.tcell .tv{font-family:"IBM Plex Mono",monospace;font-size:18px;font-weight:700}
+.tcell .tv.good{color:var(--green)}
+.layout{display:flex;gap:16px;align-items:flex-start}
+.content{flex:1;min-width:0}
+.catpanel{width:190px;flex-shrink:0;background:var(--panel);border:1px solid var(--line);border-radius:12px;box-shadow:var(--shadow);padding:12px;position:sticky;top:16px}
+.catpanel h2{font-size:13px;font-weight:800;letter-spacing:.04em;color:var(--muted);margin:0 0 8px;text-transform:uppercase}
+.catlist{display:flex;flex-direction:column;gap:4px}
+.catbtn{display:flex;align-items:center;justify-content:space-between;gap:8px;width:100%;text-align:left;border:1px solid transparent;background:transparent;color:var(--ink);border-radius:9px;padding:10px 11px;font-size:14.5px;font-weight:700;cursor:pointer;font-family:inherit;min-height:44px}
+.catbtn:hover{background:var(--panel2)}
+.catbtn.on{background:var(--ink);color:var(--bg)}
+.catbtn .cnt{font-family:"IBM Plex Mono",monospace;font-weight:700;font-size:13px;color:var(--muted)}
+.catbtn.on .cnt{color:var(--bg);opacity:.75}
+@media(max-width:720px){
+  .layout{flex-direction:column}
+  .catpanel{width:100%;position:static}
+  .catlist{flex-direction:row;flex-wrap:wrap}
+  .catbtn{width:auto;flex:1 1 auto}
+  .basket{position:static;box-shadow:none}
+  .wrap{padding-bottom:24px}
+}
+
+/* Filters + sort */
+.bar{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin-bottom:8px}
+.pill{border:1px solid var(--line);background:var(--panel);color:var(--muted);border-radius:999px;padding:10px 15px;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit;min-height:44px}
+.pill.on{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.pill .cnt{font-family:"IBM Plex Mono",monospace;font-weight:700}
+.sortlab{font-size:12.5px;font-weight:800;color:var(--muted);margin-left:2px}
+.undobtn{margin-left:auto;width:44px;height:44px;border-radius:999px;border:1px solid var(--line);background:var(--panel);color:var(--ink);font-size:18px;cursor:pointer;font-family:inherit}
+.undobtn:disabled{opacity:.35;cursor:default}
+
+/* Rows */
+.list{display:flex;flex-direction:column;gap:8px;margin-top:10px}
+.row{background:var(--panel);border:1px solid var(--line);border-radius:12px;box-shadow:var(--shadow);padding:12px 14px}
+.row.removed{opacity:.75}
+.top{display:flex;align-items:flex-start;gap:12px}
+.thumb{width:64px;height:64px;flex-shrink:0;border-radius:10px;border:1px solid var(--line);background:#fff;object-fit:cover}
+.main{flex:1;min-width:0}
+.name{font-size:16px;font-weight:800;line-height:1.25;margin:0}
+.prices{display:flex;flex-wrap:wrap;gap:4px 16px;margin-top:5px;font-size:13.5px;color:var(--muted);font-weight:600}
+.prices .val{font-family:"IBM Plex Mono",monospace;font-weight:700;color:var(--ink)}
+.prices .usd{font-family:"IBM Plex Mono",monospace;font-size:11.5px;font-weight:600;color:var(--muted)}
+.profit{font-family:"IBM Plex Mono",monospace;font-size:30px;font-weight:700;line-height:1;white-space:nowrap;text-align:right}
+.profit.pos{color:var(--green)} .profit.neg{color:var(--red)}
+.profit small{display:block;font-family:"Manrope","Noto Sans Armenian",sans-serif;font-size:11px;font-weight:700;color:var(--muted);margin-top:4px;letter-spacing:.04em}
+.badge{display:inline-block;margin-top:6px;font-size:11.5px;font-weight:800;line-height:1;padding:5px 8px;border-radius:999px;letter-spacing:.01em}
+.badge.high{background:var(--green-bg);color:var(--green)}
+.badge.medium{background:var(--blue-bg);color:var(--blue)}
+.badge.low{background:var(--red-bg);color:var(--red)}
+.badge.good{background:var(--green-bg);color:var(--green)}
+.badge.maybe{background:var(--blue-bg);color:var(--blue)}
+.links{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
+.links a{font-size:13px;font-weight:800;text-decoration:none;border:1px solid var(--line);border-radius:9px;padding:8px 11px;color:var(--ink);background:var(--panel);min-height:38px;display:inline-flex;align-items:center}
+.links a.us{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.links .nolink{font-size:13px;font-weight:700;color:var(--muted);border:1px dashed var(--line);border-radius:9px;padding:8px 11px;min-height:38px;display:inline-flex;align-items:center}
+.actions{display:flex;gap:6px;align-items:stretch;margin-top:10px}
+.mbtn{flex:1;min-height:48px;border-radius:10px;border:1.5px solid var(--line);background:var(--panel2);color:var(--ink);font-size:14.5px;font-weight:800;cursor:pointer;font-family:inherit;padding:8px 4px}
+.mbtn:active{transform:translateY(1px)}
+.mbtn.on-like{background:var(--green);border-color:var(--green);color:#fff}
+.mbtn.on-later{background:var(--blue);border-color:var(--blue);color:#fff}
+.mbtn.on-removed{background:var(--red);border-color:var(--red);color:#fff}
+@media (prefers-color-scheme: dark){.mbtn.on-like,.mbtn.on-later,.mbtn.on-removed{color:#101511}}
+.qty{display:flex;align-items:center;gap:2px;margin-left:4px}
+.qty button{width:44px;height:48px;border-radius:10px;border:1px solid var(--line);background:var(--panel);color:var(--ink);font-size:19px;font-weight:800;cursor:pointer;font-family:inherit}
+.qty .n{font-family:"IBM Plex Mono",monospace;font-size:16px;font-weight:700;min-width:24px;text-align:center}
+@media(max-width:520px){
+  .thumb{width:54px;height:54px}
+  .profit{font-size:25px}
+  .actions{flex-wrap:wrap}
+  .qty{margin-left:auto}
+}
+
+/* Basket */
+.basket{position:fixed;left:0;right:0;bottom:0;background:var(--panel);border-top:1px solid var(--line);box-shadow:0 -2px 10px rgba(0,0,0,.08);z-index:40}
+.basket .in{max-width:1080px;margin:0 auto;padding:10px 14px calc(10px + env(safe-area-inset-bottom));display:flex;align-items:center;gap:18px;flex-wrap:wrap}
+.basket .t{font-size:15px;font-weight:800}
+.basket .cell .l{font-size:11px;font-weight:800;letter-spacing:.05em;color:var(--muted);text-transform:uppercase}
+.basket .cell .v{font-family:"IBM Plex Mono",monospace;font-size:18px;font-weight:700}
+.basket .cell.profitv .v{color:var(--green)}
+.basket .cell .s{font-family:"IBM Plex Mono",monospace;font-size:11.5px;font-weight:600;color:var(--muted)}
+@media(max-width:720px){.basket{position:static;box-shadow:none}}
+.note{font-size:12.5px;color:var(--muted);font-weight:600;margin-top:6px;line-height:1.35}
+.empty{text-align:center;color:var(--muted);padding:32px 10px;font-size:15px}
+.toast{position:fixed;left:50%;transform:translateX(-50%);bottom:92px;background:var(--ink);color:var(--bg);padding:10px 16px;border-radius:10px;font-size:14px;font-weight:700;opacity:0;pointer-events:none;transition:opacity .2s;z-index:50;max-width:92vw;text-align:center}
+.toast.show{opacity:1}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="layout">
+  <aside class="catpanel" aria-label="Կատեգորիաներ">
+    <h2>Կատեգորիա</h2>
+    <div class="catlist" id="catList"></div>
+  </aside>
+  <div class="content">
+  <h1>Հայաստանում վերավաճառք</h1>
+
+  <div class="totals">
+    <div class="tcell"><span class="tl">Լավ</span><span class="tv good">$4,731.60</span></div>
+    <div class="tcell"><span class="tl">Լավ + Հնարավոր</span><span class="tv">$6,905.69</span></div>
+    <div class="tcell"><span class="tl">Նպատակ</span><span class="tv">$2,335.14</span></div>
+  </div>
+
+  <div class="bar" id="markPills">
+    <button class="pill on" data-markf="all" type="button">Բոլորը</button>
+    <button class="pill" data-markf="like" type="button">Հավանած <span class="cnt" id="cntLike">0</span></button>
+    <button class="pill" data-markf="later" type="button">Հետո <span class="cnt" id="cntLater">0</span></button>
+    <button class="pill" data-markf="removed" type="button">Հեռացրած <span class="cnt" id="cntRem">0</span></button>
+    <button class="undobtn" id="undoBtn" type="button" disabled aria-label="Հետարկել վերջինը" title="Հետարկել վերջինը">↩</button>
+  </div>
+
+  <div class="bar" id="demandPills">
+    <span class="sortlab">Պահանջարկ՝</span>
+    <button class="pill on" data-demand="all" type="button">Բոլորը</button>
+    <button class="pill" data-demand="high" type="button">Բարձր <span class="cnt" id="cntHigh">0</span></button>
+    <button class="pill" data-demand="medium" type="button">Միջին <span class="cnt" id="cntMed">0</span></button>
+    <button class="pill" data-demand="low" type="button">Ցածր <span class="cnt" id="cntLow">0</span></button>
+  </div>
+
+  <div class="bar" id="sortPills">
+    <span class="sortlab">Դասավորել՝</span>
+    <button class="pill on" data-sort="profit" type="button">Շահույթ</button>
+    <button class="pill" data-sort="us" type="button">Գին</button>
+    <button class="pill" data-sort="name" type="button">Անուն</button>
+  </div>
+
+  <div class="list" id="list"></div>
+  </div>
+  </div>
+</div>
+
+<div class="basket">
+  <div class="in">
+    <span class="t">Զամբյուղ</span>
+    <div class="cell"><div class="l">Հատ</div><div class="v" id="bUnits">0</div></div>
+    <div class="cell"><div class="l">Արժեքը հարկով</div><div class="v"><span id="bCost">0 դրամ</span> <span class="s" id="bCostUsd">$0</span></div></div>
+    <div class="cell profitv"><div class="l">Շահույթ</div><div class="v"><span id="bProfit">0 դրամ</span> <span class="s" id="bProfitUsd">$0</span></div></div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+var SHEET = "https://docs.google.com/spreadsheets/d/1TXrnkSOg5wRnvJecEKQ6MD2VIrVA-e2rpPNud3tMlbQ/edit";
+var RATE = 363, TAX = 1.0625;
+
+var CATS = {electronics:"Էլեկտրոնիկա", beauty:"Կոսմետիկա", vitamins:"Վիտամիններ", kitchen:"Խոհանոց", sport:"Սպորտ", baby:"Մանկական"};
+var DEMAND = {high:"Բարձր պահանջարկ", medium:"Միջին պահանջարկ", low:"Ցածր պահանջարկ"};
+var STATUS_CLASS = {"Good":"good","Maybe":"maybe","Լավ":"good","Հնարավոր":"maybe"};
+
+var IMG = {ps5:"ps5.jpg", xm5:"xm5.jpg", watch:"watch.jpg", switch:"switch.jpg", rayban:"rayban.jpg", airpods:"airpods.jpg", ceravepm:"ceravepm.jpg", ceraveeye:"ceraveeye.jpg", ordinary:"ordinary.jpg", vs:"vs.jpg", bbw:"bbw.jpg", ceravecream:"ceravecream.jpg", omega100:"omega100.jpg", coq10:"coq10.jpg", omega50:"omega50.jpg", zinc:"zinc.jpg", melatonin:"melatonin.jpg", d3:"d3.jpg", arginine:"arginine.jpg", glycolic:"glycolic.jpg", hyaluronic:"hyaluronic.jpg", quest3:"quest3.jpg", quest3s:"quest3s.jpg", dji:"dji.jpg", kindle:"kindle.jpg", gopro:"gopro.jpg", laneige:"laneige.jpg", mxmaster:"mxmaster.jpg", bcomplex:"bcomplex.jpg", acidophilus:"acidophilus.jpg", gummies:"gummies.jpg", mandelic:"mandelic.jpg", snail:"snail.jpg", vitc:"vitc.jpg", bojrelief:"bojrelief.jpg", bojaqua:"bojaqua.jpg", arbutin:"arbutin.jpg", bojcalming:"bojcalming.jpg", bojstick:"bojstick.jpg", effaclar:"effaclar.jpg", vsbare:"vsbare.jpg", vslove:"vslove.jpg", vsbombshell:"vsbombshell.jpg", vsaqua:"vsaqua.jpg", vsvelvet:"vsvelvet.jpg", bbwlotion:"bbwlotion.jpg", bbwcream:"bbwcream.jpg", bbwwash:"bbwwash.jpg", bbwglowtion:"bbwglowtion.jpg", bbwbutterfly:"bbwbutterfly.jpg", cerave473:"cerave473.jpg", cerave355:"cerave355.jpg", sdjplay:"sdjplay.jpg", sdjrosa:"sdjrosa.jpg", jblflip6:"jblflip6.jpg", marshall:"marshall.jpg", boseultra:"boseultra.jpg", bosebuds2:"bosebuds2.jpg", boseqc45:"boseqc45.jpg", insta360x5:"insta360x5.jpg", ps5slim:"ps5slim.jpg", dualsense:"dualsense.jpg", watchse40:"watchse40.jpg", watchse44:"watchse44.jpg", watchs11:"watchs11.jpg", airpods4:"airpods4.jpg", venu4:"venu4.jpg", whoop:"whoop.jpg", fenix8:"fenix8.jpg", ipad11:"ipad11.jpg", ipadair256:"ipadair256.jpg", pencilusbc:"pencilusbc.jpg", mxkeys:"mxkeys.jpg", magicmouse:"magicmouse.jpg", adapter20w:"adapter20w.jpg", ipadair128:"ipadair128.jpg", trackpadblk:"trackpad.jpg", avadapter:"avadapter.jpg", magickb13:"magickb13.jpg", razerdeath:"razerdeath.jpg", blueyeti:"blueyeti.jpg", djimicmini:"djimicmini.jpg", owala24:"owala24.jpg", owala40:"owala40.jpg", jjdrainer:"jjdrainer.jpg", jjdrawer:"jjdrawer.jpg", jjhold:"jjhold.jpg", jjnest:"jjnest.jpg", zwpro:"zwpro.jpg", zw1731:"zw1731.jpg", zwallstar:"zwallstar.jpg", jjmilltop:"jjmilltop.jpg", bialetti3:"bialetti3.jpg", bialetti6:"bialetti6.jpg", hrm200:"hrm200.jpg", hrm600:"hrm600.jpg", avent17:"avent.jpg", beatspro:"beatspro.jpg", psportal:"psportal.jpg", instax13:"instax13.jpg", instaxevo:"instaxevo.jpg", instaxliplay:"instaxliplay.jpg", airtag4:"airtag4.jpg", nbiron:"nbiron.jpg", nbglucosamine:"nbglucosamine.jpg", airtag1:"airtag1.jpg", beatssolo4:"beatssolo4.jpg", djiaction5:"djiaction5.jpg", whooppeak:"whooppeak.jpg", dualsenseedge:"dualsenseedge.jpg", ankerprime:"ankerprime.jpg", ultwear:"ultwear.jpg"};
+
+var PRODUCTS = [
+ {id:"ps5", demand:"low", cat:"electronics", name:"PlayStation 5 Pro 2TB", usPrice:899, armAMD:649900, usStore:"PlayStation Direct", armStore:"list.am", usLink:"https://direct.playstation.com/en-us/buy-consoles/playstation5-pro-console", armLink:"https://www.list.am/en/item/24151052"},
+ {id:"xm5", demand:"medium", cat:"electronics", name:"Sony WH-1000XM5", usPrice:198, armAMD:139000, usStore:"Sony", armStore:"list.am", usLink:"https://electronics.sony.com/audio/headphones/headband/p/wh1000xm5-s", armLink:"https://www.list.am/en/item/20923546"},
+ {id:"watch", demand:"high", cat:"electronics", name:"Apple Watch Ultra 4, 49mm", usPrice:799, armAMD:359900, usStore:"Best Buy", armStore:"list.am", usLink:"https://www.bestbuy.com/product/apple-watch-ultra-4-gps-cellular-49mm-titanium-case-with-translucent-black-ocean-band-black-2026/JJGCQPR88C", armLink:"https://www.list.am/en/item/995283925"},
+ {id:"switch", demand:"high", cat:"electronics", name:"Nintendo Switch 2", usPrice:499.99, armAMD:219000, usStore:"Best Buy", armStore:"list.am", usLink:"https://www.bestbuy.com/product/switch-2-system/J7GSL57TGH", armLink:"https://www.list.am/en/item/22681076"},
+ {id:"rayban", demand:"medium", cat:"electronics", name:"Ray-Ban Meta Gen 2, Transitions", usPrice:459, armAMD:199000, usStore:"Best Buy", armStore:"list.am", usLink:"https://www.bestbuy.com/product/ray-ban-meta-wayfarer-gen-2-glasses-with-meta-ai-audio-photo-video-compatibility-clear-lenses-matte-black/BCKFSGRX3H", armLink:"https://www.list.am/en/item/23589895"},
+ {id:"airpods", demand:"high", cat:"electronics", name:"AirPods Pro 3", usPrice:249, armAMD:80000, usStore:"Apple", armStore:"list.am", usLink:"https://www.apple.com/shop/buy-airpods/airpods-pro-3", armLink:"https://www.list.am/en/item/23285746"},
+ {id:"ceravepm", demand:"medium", cat:"beauty", name:"CeraVe PM Facial Lotion, 89 ml", usPrice:13.62, armAMD:11700, usStore:"Walmart", armStore:"@gloweetee.cosmetics", usLink:"https://www.walmart.com/ip/CeraVe-PM-Niacinamide-Hyaluronic-Acid-Facial-Moisturizer-for-All-Skin-Types-3-fl-oz/184657985", armLink:"https://www.instagram.com/p/DVGCzwyjICM/"},
+ {id:"ceraveeye", demand:"medium", cat:"beauty", name:"CeraVe Eye Repair Cream, 14 ml", usPrice:12.72, armAMD:11500, usStore:"Walmart", armStore:"@gloweetee.cosmetics", usLink:"https://www.walmart.com/ip/CeraVe-Eye-Repair-Cream-for-Dark-Circles-and-Puffiness-for-All-Skin-Types-0-5-oz/780490354", armLink:"https://www.instagram.com/p/DVBKBXgja2W/"},
+ {id:"ordinary", demand:"high", cat:"beauty", name:"The Ordinary Niacinamide, 30 ml", usPrice:6.00, armAMD:4900, usStore:"Sephora", armStore:"@beautybee.am", usLink:"https://www.sephora.com/product/the-ordinary-deciem-niacinamide-10-zinc-1-P427417?skuId=2031391", armLink:"https://www.instagram.com/reel/DWNuJnbDODu/"},
+ {id:"vs", demand:"high", cat:"beauty", name:"Victoria's Secret Mist, 250 ml", usPrice:8.00, armAMD:7000, usStore:"Victoria's Secret", armStore:"@beauty_body_bath_shop", usLink:"https://www.victoriassecret.com/us/vs/beauty-catalog/5000011041?choice=8527&genericId=11259203", armLink:"https://www.instagram.com/p/DcDQlvdO2cL/"},
+ {id:"bbw", demand:"high", cat:"beauty", name:"Bath and Body Works Mist, 8 oz", usPrice:5.95, armAMD:7900, usStore:"Bath & Body Works", armStore:"@fesco_cosmetics", usLink:"https://www.bathandbodyworks.com/p/a-thousand-wishes-fine-fragrance-mist-028033522", armLink:"https://www.instagram.com/reel/DXuVBtSk-iV/"},
+ {id:"ceravecream", demand:"medium", cat:"beauty", name:"CeraVe Moisturising Cream, 340 ml", usPrice:10.00, armAMD:10700, usStore:null, armStore:null, usLink:null, armLink:null},
+ {id:"omega100", demand:"low", cat:"vitamins", name:"Solgar Omega-3 950mg, 100 softgels", usPrice:40.06, armAMD:48000, profitAMD:32549, usStore:"Target", armStore:"AlfaPharm", usLink:"https://www.target.com/p/solgar-triple-strength-omega-3/-/A-91700924", armLink:"https://www.alfapharm.am/en/products/view/omega-3-kaps-950mg-kh-100-solgar-epk53-dgk39-8-31939"},
+ {id:"coq10", demand:"medium", cat:"vitamins", name:"Doctor's Best CoQ10 100mg, 120 caps", usPrice:21.99, armAMD:28250, profitAMD:19769, usStore:"Target", armStore:"AlfaPharm", usLink:"https://www.target.com/p/doctor-s-best-high-absorption-coq10-with-bioperine-100-mg-120-veggie-caps/-/A-82569909", armLink:"https://www.alfapharm.am/en/products/view/koenzim-q10-100mg-kaps-kh-120-29128"},
+ {id:"omega50", demand:"medium", cat:"vitamins", name:"Solgar Omega-3 950mg, 50 softgels", usPrice:22.99, armAMD:28400, profitAMD:19533, usStore:"Target", armStore:"AlfaPharm", usLink:"https://www.target.com/p/solgar-omega-3-epa-dha-triple-strength-950-mg-50-softgels/-/A-1002587701", armLink:"https://www.alfapharm.am/en/products/view/omega-3-kaps-950mg-kh-50-epk53-dgk39-8-solgar-31940"},
+ {id:"zinc", demand:"low", cat:"vitamins", name:"NOW Zinc Picolinate 50mg, 120 caps", usPrice:14.99, armAMD:18000, profitAMD:12219, usStore:"Target", armStore:"AlfaPharm", usLink:"https://www.target.com/p/now-foods-zinc-picolinate-50-mg-120-veg-capsules/-/A-1010177417", armLink:"https://www.alfapharm.am/en/products/view/tsinka-pikolinat-kaps-50mg-kh-120-36598"},
+ {id:"melatonin", demand:"medium", cat:"vitamins", name:"Natrol Melatonin 10mg, 60 tabs", usPrice:9.19, armAMD:15800, profitAMD:12256, usStore:"Target", armStore:"AlfaPharm", usLink:"https://www.target.com/p/natrol-melatonin-10mg-maximum-strength-fast-dissolve-sleep-aid-tablets-strawberry-60ct/-/A-78853513", armLink:"https://www.alfapharm.am/en/products/view/melatonin-tab-sublingv-10mg-x-60-natrol-30515", note:"Գնելուց առաջ նորից ստուգել գինը։"},
+ {id:"d3", demand:"high", cat:"vitamins", name:"Doctor's Best Vitamin D3 5000 IU, 180 softgels", usPrice:14.99, armAMD:14500, profitAMD:8719, usStore:"Target", armStore:"AlfaPharm", usLink:"https://www.target.com/p/doctor-s-best-vitamin-d3-125-mcg-5-000-iu-360-softgels/-/A-82571136", armLink:"https://www.alfapharm.am/en/products/view/vitamin-d3-5000-me-kaps-kh-180-25757", note:"Target-ում վաճառողին ստուգել վճարելիս։"},
+ {id:"arginine", demand:"low", cat:"vitamins", name:"Nature's Bounty L-Arginine 1000mg, 50 tabs", usPrice:14.25, armAMD:26400, profitAMD:20904, usStore:"Walmart", armStore:"AlfaPharm", usLink:"https://www.walmart.com/browse/health-and-medicine/all-protein-supplements/nature-s-bounty/976760_1166769_9231506/YnJhbmQ6TmF0dXJlJ3MgQm91bnR5", armLink:"https://www.alfapharm.am/en/products/view/l-arginin-n-eichers-baunti-tab-1000mg-kh-50-38910", note:"ԱՄՆ գինը ստուգել խանութում։"},
+ {id:"glycolic", demand:"medium", cat:"beauty", name:"The Ordinary Glycolic Acid 7% Toner, 8 oz", usPrice:13.50, armAMD:10500, profitAMD:5293, usStore:"Ulta", armStore:"Instagram", usLink:"https://www.ulta.com/p/glycolic-acid-7-exfoliating-brightening-daily-toner-pimprod2007097", armLink:"https://www.instagram.com/reel/DUQdc6PDGG_/", note:"Հայաստանի գինը նորից ստուգել։"},
+ {id:"hyaluronic", demand:"medium", cat:"beauty", name:"The Ordinary Hyaluronic Acid 2% + B5, 30 ml", usPrice:9.90, armAMD:6700, profitAMD:2882, usStore:"Ulta", armStore:"Instagram", usLink:"https://www.ulta.com/p/hyaluronic-acid-2-b5-hydrating-serum-with-ceramides-pimprod2043525", armLink:"https://www.instagram.com/p/DTcRkjRDTFP/", note:"Հայաստանի գինը նորից ստուգել։"},
+ {id:"quest3", demand:"low", cat:"electronics", name:"Meta Quest 3, 512GB", usPrice:599.99, armAMD:309000, profitAMD:77591, usStore:"Best Buy", armStore:"MG Mobile", usLink:"https://www.bestbuy.com/product/meta-quest-3-512gb--virtual-reality-vr-headset-includes-golf--tpc-sawgrass-course-and-1800-in-game-credits-white/J3LHRV8694", armLink:"https://www.list.am/en/item/23992142"},
+ {id:"quest3s", demand:"medium", cat:"electronics", name:"Meta Quest 3S, 128GB", usPrice:349.00, armAMD:169000, profitAMD:34394, usStore:"Adorama", armStore:"ICase Mobile", usLink:"https://www.adorama.com/meta-quest-3s-128gb-vr-headset/p/meq3s128g", armLink:"https://www.list.am/en/item/24055972"},
+ {id:"dji", demand:"medium", cat:"electronics", name:"DJI Osmo Pocket 3", usPrice:439.00, armAMD:190000, profitAMD:20684, usStore:"Best Buy", armStore:"Black Store Mobile", usLink:"https://www.bestbuy.com/product/dji-osmo-pocket-3-3-axis-stabilized-4k-handheld-camera-with-rotatable-touchscreen-gray/JJ82LX7JFZ", armLink:"https://www.list.am/en/item/23815209"},
+ {id:"kindle", demand:"low", cat:"electronics", name:"Amazon Kindle Paperwhite 16GB (2024)", usPrice:199.99, armAMD:95000, profitAMD:17867, usStore:"Best Buy", armStore:"MG Mobile", usLink:"https://www.bestbuy.com/product/amazon-kindle-paperwhite-16-gb-2024-black/J39HW6QL86", armLink:"https://www.list.am/en/item/22258041"},
+ {id:"gopro", demand:"medium", cat:"electronics", name:"GoPro HERO13 Black", usPrice:429.99, armAMD:179000, profitAMD:13159, usStore:"Best Buy", armStore:"YerevanMobile", usLink:"https://www.bestbuy.com/product/gopro-hero13-black-action-camera-black/J3GW35FPRH", armLink:"https://www.list.am/en/item/23154361"},
+ {id:"mxmaster", demand:"low", cat:"electronics", name:"Logitech MX Master 3S Wireless, Black", usPrice:89.99, armAMD:49900, profitAMD:15195, usStore:"Best Buy", armStore:"Smart Store Sayat-Nova", usLink:"https://www.bestbuy.com/product/logitech-mx-master-3s-wireless-usb-a-laser-mouse-with-ultrafast-scrolling-wireless-black/J7H7ZY8XTK/sku/6502577/reviews", armLink:"https://www.list.am/en/item/17044642", note:"Միայն $89.99 զեղչված գնով։"},
+ {id:"laneige", demand:"medium", cat:"beauty", name:"Laneige Lip Sleeping Mask EX Berry, 20 g", usPrice:24.00, armAMD:10900, profitAMD:1644, usStore:"Laneige", armStore:"Sirun Ankyun Korean care", usLink:"https://us.laneige.com/products/lip-sleeping-mask", armLink:"https://www.list.am/en/item/22882462", note:"Շահույթը փոքր է, միայն որպես լրացում։"},
+ {id:"bcomplex", demand:"medium", cat:"vitamins", name:"Solgar B-Complex \"100\", 50 vegetable capsules", usPrice:15.99, armAMD:16000, profitAMD:9833, usStore:"Target", armStore:"AlfaPharm", usLink:"https://www.target.com/s/solgar+bcomplex", armLink:"https://www.alfapharm.am/en/products/view/b-kompleks-solgar-kaps-kh-50-24490"},
+ {id:"acidophilus", demand:"medium", cat:"vitamins", name:"Nature's Bounty Acidophilus Probiotic, 100 tabs", usPrice:11.00, armAMD:13300, profitAMD:9060, usStore:"CVS", armStore:"ABAPharm", usLink:"https://es.cvs.com/shop/nature-s-bounty-acidophilus-probiotic-twin-pack-100-ct-2-pk-prodid-1070410", armLink:"https://www.abapharm.am/en/products/023075"},
+ {id:"gummies", demand:"high", cat:"vitamins", name:"Nature's Bounty Hair, Skin & Nails Gummies with Biotin & Collagen, Tropical Citrus, 90 ct", usPrice:7.88, armAMD:7000, profitAMD:3961, usStore:"Walmart", armStore:"Instagram", usLink:"https://www.walmart.com/ip/Nature-s-Bounty-Hair-Skin-and-Nails-With-Collagen-and-Biotin-Gummies-Tropical-Citrus-90-Ct/850852947", armLink:"https://www.instagram.com/p/DX418a8jGu6/"},
+ {id:"mandelic", demand:"high", cat:"beauty", name:"The Ordinary Mandelic Acid 10% + HA, 30 ml", usPrice:7.80, armAMD:6700, profitAMD:3692, usStore:"Sephora", armStore:"Instagram", usLink:"https://www.sephora.com/buy/mandelic-acid-skincare?icid2=seop_relatedlinks", armLink:"https://www.instagram.com/p/DTsQYDjjVpa/", verify:"Armenia IG price is 5-22 months old, re-confirm before buying."},
+ {id:"snail", demand:"high", cat:"beauty", name:"COSRX Advanced Snail 92 All In One Cream, 100 g", usPrice:21.90, armAMD:12500, profitAMD:4053, usStore:"Ulta", armStore:"Instagram", usLink:"https://www.ulta.com/p/advanced-snail-92-all-in-one-cream-pimprod2038492", armLink:"https://www.instagram.com/reel/DE9qilOMT7g/", verify:"Armenia IG price is 5-22 months old, re-confirm before buying."},
+ {id:"vitc", demand:"high", cat:"beauty", name:"The Ordinary Vitamin C Suspension 23% + HA Spheres 2%, 30 ml", usPrice:8.10, armAMD:6500, profitAMD:3376, usStore:"Ulta", armStore:"Instagram", usLink:"https://www.ulta.com/p/vitamin-c-suspension-23-ha-spheres-2-serum-with-pure-l-ascorbic-acid-pimprod2007129", armLink:"https://www.instagram.com/p/DTVOLVMAhJ0/", verify:"Armenia IG price is 5-22 months old, re-confirm before buying."},
+ {id:"bojrelief", demand:"high", cat:"beauty", name:"Beauty of Joseon Relief Sun: Rice + Probiotics, 50 ml", usPrice:18.00, armAMD:10500, profitAMD:3558, usStore:"Beauty of Joseon", armStore:"Instagram", usLink:"https://beautyofjoseon.com/products/relief-sun-rice-probiotics?country=PA", armLink:"https://www.instagram.com/reel/DZaNrPMK8nb/", verify:"Armenia IG price is 5-22 months old, re-confirm before buying. US $18 is from the brand site, no live Ulta/Sephora product page found, verify in store."},
+ {id:"bojaqua", demand:"high", cat:"beauty", name:"Beauty of Joseon Relief Sun Aqua-Fresh: Rice + B5, 50 ml", usPrice:18.00, armAMD:10500, profitAMD:3558, usStore:"Beauty of Joseon", armStore:"Instagram", usLink:"https://beautyofjoseon.com/products/relief-sun-rice-probiotics?country=PA", armLink:"https://www.instagram.com/reel/DZaNrPMK8nb/", verify:"Armenia IG price is 5-22 months old, re-confirm before buying. US $18 is from the brand site, no live Ulta/Sephora product page found, verify in store."},
+ {id:"arbutin", demand:"high", cat:"beauty", name:"The Ordinary Alpha Arbutin 2% + HA, 30 ml", usPrice:11.50, armAMD:7650, profitAMD:3215, usStore:"Ulta", armStore:"Instagram", usLink:"https://www.ulta.com/p/alpha-arbutin-2-hyaluronic-acid-hyperpigmentation-pimprod2007108?sku=2551165", armLink:"https://www.instagram.com/reel/DSsOIIOgoUo/", verify:"Armenia IG price is 5-22 months old, re-confirm before buying."},
+ {id:"bojcalming", demand:"medium", cat:"beauty", name:"Beauty of Joseon Calming Barrier Serum: Green Tea + Panthenol, 30 ml", usPrice:17.00, armAMD:9500, profitAMD:2943, usStore:"Sephora", armStore:"Instagram", usLink:"https://www.sephora.com/product/beauty-of-joseon-calming-serum-P519334?icid2=products%20grid:p519334:product&skuId=2918076", armLink:"https://www.instagram.com/p/DZGC4sgiiWk/", verify:"Armenia IG price is 5-22 months old, re-confirm before buying."},
+ {id:"bojstick", demand:"medium", cat:"beauty", name:"Beauty of Joseon Matte Sun Stick: Mugwort + Camelia, 18 g", usPrice:18.00, armAMD:9500, profitAMD:2558, usStore:"Beauty of Joseon", armStore:"Instagram", usLink:"https://beautyofjoseon.com/products/relief-sun-rice-probiotics?country=PA", armLink:"https://www.instagram.com/p/DZGAIfOCpaI/", verify:"Armenia IG price is 5-22 months old, re-confirm before buying. US $18 is from the brand site, no live Ulta/Sephora product page found, verify in store."},
+ {id:"effaclar", demand:"high", cat:"beauty", name:"La Roche-Posay Effaclar Purifying Foaming Gel Cleanser, 400 ml", usPrice:26.99, armAMD:12300, profitAMD:1888, usStore:"Ulta", armStore:"ABAPharm", usLink:"https://www.ulta.com/p/effaclar-purifying-foaming-gel-cleanser-oily-skin-pimprod2043459?sku=2620367", armLink:"https://www.abapharm.am/en/products/000595"},
+ {id:"vsbare", demand:"high", cat:"beauty", name:"Victoria's Secret Fragrance Lotion, Bare Vanilla, 236 ml", usPrice:8.00, armAMD:7990, profitAMD:4904, usStore:"Victoria's Secret", armStore:"Instagram", usLink:"https://www.victoriassecret.com/us/vs/beauty/fragrance-lotions", armLink:"https://www.instagram.com/p/DbgNIj6DcwD/", note:"Միայն զեղչով՝ $8։"},
+ {id:"vslove", demand:"high", cat:"beauty", name:"Victoria's Secret Fragrance Lotion, Love Spell, 236 ml", usPrice:8.00, armAMD:7000, profitAMD:3913, usStore:"Victoria's Secret", armStore:"Instagram", usLink:"https://www.victoriassecret.com/us/vs/beauty/fragrance-lotions", armLink:"https://www.instagram.com/p/DfE8ZH3CKzg/", note:"Միայն զեղչով։"},
+ {id:"vsbombshell", demand:"medium", cat:"beauty", name:"Victoria's Secret Bombshell Fine Fragrance Lotion Intense, 250 ml", usPrice:25.00, armAMD:15000, profitAMD:5359, usStore:"Victoria's Secret", armStore:"Instagram", usLink:"https://www.victoriassecret.com/us/vs/beauty-catalog/5000006636/-/a/generic-11254219-choice-2457/bombshell-fine-fragrance-lotion-floral", armLink:"https://www.instagram.com/p/DbtaJVbsClJ/", note:"Գնելուց առաջ ստուգել Intense-ի ԱՄՆ գինը։"},
+ {id:"vsaqua", demand:"medium", cat:"beauty", name:"Victoria's Secret Fragrance Lotion + Mist Set, Aqua Kiss", usPrice:17.95, armAMD:13000, profitAMD:6078, usStore:"Victoria's Secret", armStore:"Instagram", usLink:"https://www.victoriassecret.com/us/vs/beauty/fragrance-lotions", armLink:"https://www.instagram.com/p/DcOGeMNN0Cr/", note:"Միայն զեղչով։"},
+ {id:"vsvelvet", demand:"medium", cat:"beauty", name:"Victoria's Secret Fragrance Lotion + Mist Set, Velvet Petals", usPrice:17.95, armAMD:13000, profitAMD:6078, usStore:"Victoria's Secret", armStore:"Instagram", usLink:"https://www.victoriassecret.com/us/vs/beauty/fragrance-lotions", armLink:"https://www.instagram.com/p/DbtUsIGtL9J/", note:"Միայն զեղչով։"},
+ {id:"bbwlotion", demand:"high", cat:"beauty", name:"Bath & Body Works Daily Nourishing Body Lotion, A Thousand Wishes, 8 oz", usPrice:6.95, armAMD:6500, profitAMD:3820, usStore:"Bath & Body Works", armStore:"Instagram", usLink:"https://www.bathandbodyworks.com/c/body-care/body-care-promotion-4", armLink:"https://www.instagram.com/reel/DXuVBtSk-iV/", note:"Միայն զեղչով, երբեք ամբողջ գնով։"},
+ {id:"bbwcream", demand:"high", cat:"beauty", name:"Bath & Body Works Ultimate Hydration Body Cream, A Thousand Wishes, 8 oz", usPrice:6.95, armAMD:6500, profitAMD:3820, usStore:"Bath & Body Works", armStore:"Instagram", usLink:"https://www.bathandbodyworks.com/es-us/p/a-thousand-wishes-ultimate-hydration-body-cream-028005116", armLink:"https://www.instagram.com/reel/DXuVBtSk-iV/", note:"Միայն զեղչով։"},
+ {id:"bbwwash", demand:"high", cat:"beauty", name:"Bath & Body Works Body Wash / Shower Gel, A Thousand Wishes, 10 oz", usPrice:6.95, armAMD:6500, profitAMD:3820, usStore:"Bath & Body Works", armStore:"Instagram", usLink:"https://www.bathandbodyworks.com/p/a-thousand-wishes-body-wash-028005114", armLink:"https://www.instagram.com/p/DSpwoPsjFnD/", note:"Միայն զեղչով։"},
+ {id:"bbwglowtion", demand:"medium", cat:"beauty", name:"Bath & Body Works Glowtion Body Butter, 6.5 oz", usPrice:6.95, armAMD:6500, profitAMD:3820, usStore:"Bath & Body Works", armStore:"Instagram", usLink:"https://www.bathandbodyworks.com/c/body-care/body-care-promotion-4", armLink:"https://www.instagram.com/reel/DXuVBtSk-iV/", note:"Միայն զեղչով։"},
+ {id:"bbwbutterfly", demand:"medium", cat:"beauty", name:"Bath & Body Works Butterfly Ultimate Hydration Body Cream, 8 oz", usPrice:17.95, armAMD:10900, profitAMD:3979, usStore:"Bath & Body Works", armStore:"Instagram", usLink:"https://www.bathandbodyworks.com/p/butterfly-ultimate-hydration-body-cream-028023464.html", armLink:"https://www.instagram.com/p/DcwETl8t9rj/", note:"10,900 դրամը նորից ստուգել հաղորդագրությամբ։"},
+ {id:"cerave473", demand:"high", cat:"beauty", name:"CeraVe Daily Moisturizing Lotion, 473 ml", usPrice:16.99, armAMD:13500, profitAMD:6948, usStore:"Target", armStore:"Instagram", usLink:"https://www.target.com/p/cerave-daily-moisturizing-face-and-body-lotion-for-normal-to-dry-skin/-/A-81616340?preselect=76525859", armLink:"https://www.instagram.com/p/DU6FtdfjaSN/"},
+ {id:"cerave355", demand:"high", cat:"beauty", name:"CeraVe Daily Moisturizing Lotion, 355 ml", usPrice:14.97, armAMD:11500, profitAMD:5725, usStore:"Walmart", armStore:"Instagram", usLink:"https://www.walmart.com/search?q=CeraVe%20Daily%20Moisturizing%20Lotion%20355ml", armLink:"https://www.instagram.com/p/DU6FtdfjaSN/", note:"ԱՄՆ գինը ստուգել խանութում։"},
+ {id:"sdjplay", demand:"high", cat:"beauty", name:"Sol de Janeiro Brazilian Play Moisturizing Shower Cream-Gel, 385 ml", usPrice:26.00, armAMD:16900, profitAMD:6871, usStore:"Ulta", armStore:"Instagram", usLink:"https://www.ulta.com/p/brazilian-play-body-wash-pimprod2043096?sku=2618339", armLink:"https://www.instagram.com/p/DWT0-W4DGhz/", note:"Առկայությունը ստուգել գնելուց առաջ։"},
+ {id:"sdjrosa", demand:"medium", cat:"beauty", name:"Sol de Janeiro Rosa Charmosa Dewy Cream, 75 ml", usPrice:24.00, armAMD:14500, profitAMD:5244, usStore:"Ulta", armStore:"Instagram", usLink:"https://www.ulta.com/p/rosa-charmosa-dewy-cream-pimprod2059151?sku=2657174", armLink:"https://www.instagram.com/p/DTfAkv_jFlZ/"},
+ {id:"jblflip6", demand:"high", cat:"electronics", name:"JBL Flip 6 Portable Speaker (2024) Black", usPrice:94.99, armAMD:54000, profitAMD:17362, usStore:"Best Buy", armStore:"list.am", usLink:"https://www.bestbuy.com/product/jbl-flip6-portable-waterproof-speaker-black/J7LXFW2QJG", armLink:"https://www.list.am/en/item/995146690", note:"Կան նաև 48,000 և 42,000 դրամ առաջարկներ։ Walmart-ում $79.95 զեղչով շահույթը $63.81 է։"},
+ {id:"marshall", demand:"medium", cat:"electronics", name:"Marshall Emberton III Black & Brass", usPrice:179.99, armAMD:76000, profitAMD:6581, usStore:"Best Buy", armStore:"list.am", usLink:"https://www.bestbuy.com/product/marshall-emberton-iii-portable-bluetooth-speaker-with-rugged-waterproof-dust-proof-wireless-design-black-brass/CFCR4HZWQ3/sku/6595492", armLink:"https://www.list.am/en/item/995115408"},
+ {id:"boseultra", demand:"high", cat:"electronics", name:"Bose QuietComfort Ultra Headphones (1st gen)", usPrice:349.00, armAMD:175000, profitAMD:40395, usStore:"Best Buy", armStore:"list.am", usLink:"https://www.bestbuy.com/product/bose-quietcomfort-ultra-wireless-noise-cancelling-over-the-ear-headphones-sandstone/J7C5V6T2ZC", armLink:"https://www.list.am/en/item/995142532", note:"Թանկ է, $349 կանխիկ մեկ հատի համար։"},
+ {id:"bosebuds2", demand:"medium", cat:"electronics", name:"Bose QuietComfort Earbuds II Soapstone", usPrice:237.99, armAMD:99000, profitAMD:7213, usStore:"Best Buy", armStore:"list.am", usLink:"https://www.bestbuy.com/product/bose-quietcomfort-earbuds-ii-true-wireless-noise-cancelling-in-ear-headphones-soapstone/J7C5V6TJKG/sku/6512517/reviews?page=12", armLink:"https://www.list.am/en/item/24195394"},
+ {id:"boseqc45", demand:"high", cat:"electronics", name:"Bose QuietComfort 45 Headphones Black", usPrice:249.00, armAMD:109000, profitAMD:12966, usStore:"Best Buy", armStore:"list.am", usLink:null, armLink:"https://www.list.am/en/item/24248698", note:"Միայն զեղչով, հետևել, հիմա չգնել։ $249 զեղչն ավարտվել է նոյեմբերի 8-ին, շահույթը միայն այդ գնով է, $312.99-ով վնաս է։"},
+ {id:"insta360x5", demand:"medium", cat:"electronics", name:"Insta360 X5 8K 360 Action Camera Standard Bundle", usPrice:549.99, armAMD:229000, profitAMD:16876, usStore:"Best Buy", armStore:"Instagram", usLink:"https://www.bestbuy.com/product/insta360-x5-8k-360-action-camera-black/J39VLT4C63/sku/6621693/reviews?page=4", armLink:"https://www.instagram.com/p/DZMU5l8oZiM/"},
+ {id:"ps5slim", demand:"high", cat:"electronics", name:"PlayStation 5 Slim 1TB Disc Console", usPrice:649.00, armAMD:299000, profitAMD:48689, usStore:"Walmart", armStore:"list.am", usLink:"https://www.walmart.com/ip/PlayStation-5-Disc-Console-Slim/17816601985", armLink:"https://www.list.am/en/item/24190290"},
+ {id:"dualsense", demand:"high", cat:"electronics", name:"Sony DualSense Wireless Controller White", usPrice:74.99, armAMD:33900, profitAMD:4977, usStore:"Best Buy", armStore:"list.am", usLink:"https://www.bestbuy.com/product/sony-playstation-5-dualsense-wireless-controller-white/6430163", armLink:"https://www.list.am/en/item/21080038"},
+ {id:"watchse40", demand:"high", cat:"electronics", name:"Apple Watch SE 3 40mm GPS", usPrice:249, armAMD:109900, profitAMD:13865, usStore:"Best Buy", armStore:"iSpace", usLink:"https://www.bestbuy.com/product/apple-watch-se-3-gps-40mm-aluminum-case-with-navy-blue-sport-band-m-l-midnight-2026/JJGCQP3RRF", armLink:"https://ispace.am/en/product/apple-watch-se-gps-gen3-midnight-sport-band-sm-40mm-midnight-meh94rk-a"},
+ {id:"watchse44", demand:"high", cat:"electronics", name:"Apple Watch SE 3 44mm GPS", usPrice:279, armAMD:129000, profitAMD:21386, usStore:"Best Buy", armStore:"list.am", usLink:"https://www.bestbuy.com/product/apple-watch-se-3-gps-44mm-aluminum-case-with-navy-blue-sport-band-s-m-midnight-2026/JJGCQP3QQL", armLink:"https://www.list.am/en/item/23991250"},
+ {id:"watchs11", demand:"high", cat:"electronics", name:"Apple Watch Series 11 42mm GPS", usPrice:399, armAMD:153000, profitAMD:-890, usStore:"Best Buy", armStore:"list.am", usLink:"https://www.Bestbuy.com/product/apple-watch-series-11-gps-42mm-jet-black-aluminum-case-with-black-sport-band-s-m-jet-black-2025/JJGCQLX4W6/sku/6572702/reviews", armLink:"https://www.list.am/en/item/995107126", note:"Միայն զեղչով։ Black Friday-ին $299-ով շահույթը +$103.80 է։"},
+ {id:"airpods4", demand:"high", cat:"electronics", name:"Apple AirPods 4 with Active Noise Cancellation", usPrice:119.99, armAMD:61000, profitAMD:14721, usStore:"Best Buy", armStore:"Instagram / Max Mobile", usLink:"https://www.bestbuy.com/product/apple-airpods-4-with-active-noise-cancellation-white/6447385", armLink:"https://www.instagram.com/p/Deb9sLeIlbO/", note:"Միայն $119.99 զեղչված գնով։"},
+ {id:"venu4", demand:"medium", cat:"electronics", name:"Garmin Venu 4 45mm GPS Smartwatch", usPrice:549.99, armAMD:239000, profitAMD:26876, usStore:"Best Buy", armStore:"garmin.am", usLink:"https://www.bestbuy.com/product/garmin-venu-4-gps-smartwatch-45-mm-fiber-reinforced-polymer-slate-2025/JXF9YF5FQJ/sku/6646691", armLink:"https://garmin.am/en/product/2509/venu-4-45mm-gray"},
+ {id:"whoop", demand:"medium", cat:"electronics", name:"Whoop Life MG 12-month membership", usPrice:359, armAMD:179000, profitAMD:40538, usStore:"Whoop", armStore:"YerevanMobile", usLink:"https://www.whoop.com", armLink:"https://www.yerevanmobile.am/en/whoop-life-mg.html", note:"Միայն անդամակցություն է, գնելուց առաջ հաստատել փոխանցումը գնորդին։"},
+ {id:"fenix8", demand:"medium", cat:"electronics", name:"Garmin Fenix 8 47mm AMOLED Sapphire Titanium", usPrice:1199.99, armAMD:478800, profitAMD:15979, usStore:"Garmin", armStore:"garmin.am", usLink:"https://www.garmin.com/en-US/", armLink:"https://garmin.am/en/product/2413/fenix-8-47-mm-amoled-010-02904-40-en"},
+ {id:"ipad11", demand:"high", cat:"electronics", name:"Apple iPad 11 (A16) 128GB Wi-Fi", usPrice:439, armAMD:195000, profitAMD:25683, usStore:"Walmart", armStore:"list.am", usLink:"https://www.walmart.com/", armLink:"https://www.list.am/en/item/24243263"},
+ {id:"ipadair256", demand:"medium", cat:"electronics", name:"Apple iPad Air M4 11-inch 256GB Wi-Fi Purple", usPrice:849, armAMD:389000, profitAMD:61550, usStore:"Best Buy", armStore:"list.am", usLink:"https://www.bestbuy.com/", armLink:"https://www.list.am/en/item/995137107"},
+ {id:"pencilusbc", demand:"high", cat:"electronics", name:"Apple Pencil (USB-C)", usPrice:79, armAMD:43900, profitAMD:13431, usStore:"Apple", armStore:"iSpace", usLink:"http://www.apple.com/us/shop/goto/product/MUWA3", armLink:"https://ispace.am/"},
+ {id:"mxkeys", demand:"medium", cat:"electronics", name:"Logitech MX Keys S Wireless Keyboard Black", usPrice:119.99, armAMD:54900, profitAMD:8621, usStore:"Best Buy", armStore:"list.am", usLink:"https://www.bestbuy.com/", armLink:"https://www.list.am/en/item/18835541"},
+ {id:"magicmouse", demand:"medium", cat:"electronics", name:"Apple Magic Mouse (USB-C) White", usPrice:79, armAMD:38900, profitAMD:8429, usStore:"Apple", armStore:"iSpace", usLink:"https://www.apple.com/shop/product/mxk53am/a/magic-mouse-usb%E2%80%91c-white-multi-touch-surface", armLink:"https://ispace.am/"},
+ {id:"adapter20w", demand:"medium", cat:"electronics", name:"Apple 20W USB-C Power Adapter", usPrice:19, armAMD:15000, profitAMD:7670, usStore:"Apple", armStore:"YerevanMobile", usLink:"https://www.apple.com/shop/product/mwvv3am/a/20w-usb-c-power-adapter?fnode=f5e0d3547ac19cffda1e76a353bef8aa31bb79ce0fd975e4466dc516775b1ef217e8f01ed01f9dafba8be79c7906e778240bc98025907a3f06155ed0f0c42c66d4f6583086b50583e52c1fcd19a6459cc0f624e78abd8ba1373159a6a171b23a5e7db38f4f9ecfcf9f839ea93f7618b7", armLink:"https://www.yerevanmobile.am/"},
+ {id:"ipadair128", demand:"medium", cat:"electronics", name:"Apple iPad Air M4 11-inch 128GB Wi-Fi", usPrice:749, armAMD:299000, profitAMD:10120, usStore:"Apple", armStore:"list.am", usLink:"https://www.apple.com/", armLink:"https://www.list.am/en/item/995167102"},
+ {id:"trackpadblk", demand:"medium", cat:"electronics", name:"Apple Magic Trackpad (USB-C) Black", usPrice:149, armAMD:73900, profitAMD:16433, usStore:"Apple", armStore:"iSpace", usLink:"https://www.apple.com/", armLink:"https://ispace.am/"},
+ {id:"avadapter", demand:"medium", cat:"electronics", name:"Apple USB-C Digital AV Multiport Adapter", usPrice:69.99, armAMD:47900, profitAMD:20909, usStore:"Best Buy", armStore:"iSpace", usLink:"https://www.bestbuy.com/", armLink:"https://ispace.am/"},
+ {id:"magickb13", demand:"low", cat:"electronics", name:"Apple Magic Keyboard for iPad Pro 13-inch (M4/M5) Black", usPrice:349, armAMD:192900, profitAMD:58294, usStore:"Apple", armStore:"iSpace", usLink:"https://www.apple.com/", armLink:"https://ispace.am/"},
+ {id:"razerdeath", demand:"medium", cat:"electronics", name:"Razer DeathAdder V4 Pro Wireless Gaming Mouse Black", usPrice:169.99, armAMD:77000, profitAMD:11438, usStore:"Best Buy", armStore:"list.am", usLink:"https://www.bestbuy.com/", armLink:"https://www.list.am/en/item/24190157"},
+ {id:"blueyeti", demand:"medium", cat:"electronics", name:"Blue Microphones Blue Yeti USB Condenser Microphone Blackout", usPrice:107.99, armAMD:82000, profitAMD:40351, usStore:"Best Buy", armStore:"list.am", usLink:"https://www.bestbuy.com/", armLink:"https://www.list.am/en/item/995162537"},
+ {id:"djimicmini", demand:"medium", cat:"electronics", name:"DJI Mic Mini (2 TX + 1 RX + Charging Case)", usPrice:105.74, armAMD:56000, profitAMD:15217, usStore:"Best Buy", armStore:"list.am", usLink:"https://www.bestbuy.com/", armLink:"https://www.list.am/en/item/995125840"},
+ {id:"owala24", demand:"medium", cat:"kitchen", name:"Owala FreeSip Stainless Steel Water Bottle 24 oz", usPrice:29.99, armAMD:14000, profitAMD:2436, usStore:"Target", armStore:"Instagram", usLink:"https://www.target.com/p/owala-freesip-24oz-stainless-steel-water-bottle-black/-/A-80310908", armLink:"https://www.instagram.com/reel/Dd_ZA7ORnMS/"},
+ {id:"owala40", demand:"medium", cat:"kitchen", name:"Owala FreeSip Stainless Steel Water Bottle 40 oz", usPrice:39.99, armAMD:18000, profitAMD:2577, usStore:"Target", armStore:"Facebook", usLink:"https://www.target.com/p/owala-40oz-stainless-steel-freesip-water-bottle-in-good-company/-/A-94878538", armLink:"https://www.facebook.com/reel/1530108485423337/"},
+ {id:"jjdrainer", demand:"medium", cat:"kitchen", name:"Joseph Joseph Surface Stainless Steel Cutlery Drainer", usPrice:23.00, armAMD:19900, profitAMD:11028, usStore:"Joseph Joseph", armStore:"buy.am", usLink:"https://us.josephjoseph.com/products/surface-cutlery-drainer-stone", armLink:"https://buy.am/en/products/luxus-haus/cutlery-drainer-joseph-joseph/sw57248"},
+ {id:"jjdrawer", demand:"medium", cat:"kitchen", name:"Joseph Joseph DrawerStore Large Compact Cutlery Organizer Gray", usPrice:20.00, armAMD:15900, profitAMD:8186, usStore:"Target", armStore:"buy.am", usLink:"https://www.target.com/p/joseph-joseph-drawerstore-large-compact-cutlery-organizer-gray/-/A-79729423", armLink:"https://buy.am/en/products/luxus-haus/drawerstore-cutlery-organizer-joseph-joseph/sw57268"},
+ {id:"jjhold", demand:"medium", cat:"kitchen", name:"Joseph Joseph Hold Paper Towel Holder", usPrice:29.00, armAMD:24500, profitAMD:13315, usStore:"Joseph Joseph", armStore:"buy.am", usLink:"https://us.josephjoseph.com/products/hold-paper-towel-holder-gray", armLink:"https://buy.am/en/products/luxus-haus/kitchen-roll-holder-joseph-joseph/sw57245"},
+ {id:"jjnest", demand:"medium", cat:"kitchen", name:"Joseph Joseph Nest Lock 5-Piece Container Set", usPrice:33.99, armAMD:25500, profitAMD:12393, usStore:"Target", armStore:"Facebook", usLink:"https://www.target.com/p/joseph-joseph-10pc-nest-lock-food-storage-container-set-sky/-/A-84197970", armLink:"https://www.facebook.com/reel/1231774105229041/"},
+ {id:"zwpro", demand:"medium", cat:"kitchen", name:"ZWILLING Pro Paring Knife 4 inch Black", usPrice:63.99, armAMD:42500, profitAMD:17820, usStore:"Zwilling", armStore:"zwilling.am", usLink:"https://www.zwilling.com/us/zwilling-pro-4-inch-paring-knife-38400-103/38400-103-0.html", armLink:"https://zwilling.am/en/product/zwilling-%d5%af%d5%ac%d5%ba%d5%a5%d5%ac%d5%b8%d6%82-%d5%a4%d5%a1%d5%b6%d5%a1%d5%af-10-%d5%bd%d5%b4-38400-101-0/"},
+ {id:"zw1731", demand:"low", cat:"kitchen", name:"ZWILLING TWIN 1731 Paring Knife 4 inch Brown", usPrice:299.99, armAMD:158000, profitAMD:42297, usStore:"Zwilling", armStore:"zwilling.am", usLink:"https://www.zwilling.com/us/zwilling-twin-1731-4-inch-paring-knife-31860-103/31860-103-0.html", armLink:"https://zwilling.am/en/product/zwilling-twin-1731-paring-knife-10-cm-brown-31860-101-2/", note:"Թանկ է, $300 կանխիկ մեկ հատի համար։"},
+ {id:"zwallstar", demand:"medium", cat:"kitchen", name:"ZWILLING ALL*STAR Chef's Knife 8 inch Silver", usPrice:139.99, armAMD:61900, profitAMD:7906, usStore:"Zwilling", armStore:"zwilling.am", usLink:"https://www.zwilling.com/us/zwilling-all-*-star/SFCC-Grouping_ZWILLING_AllStar_Chef-Knife_20cm.html", armLink:"https://zwilling.am/en/product/zwilling-all-star-%d5%b7%d5%a5%d6%86%d5%ad%d5%b8%d5%b0%d5%a1%d6%80%d5%a1%d6%80%d5%ab-%d5%a4%d5%a1%d5%b6%d5%a1%d5%af-200-%d5%b4%d5%b4-%d5%a1%d6%80%d5%ae%d5%a1%d5%a9%e2%80%a4-33781-204-0/"},
+ {id:"jjmilltop", demand:"medium", cat:"kitchen", name:"Joseph Joseph Milltop Salt & Pepper Set Gray", usPrice:46.00, armAMD:28800, profitAMD:11057, usStore:"Target", armStore:"buy.am", usLink:"https://www.target.com/p/joseph-joseph-milltop-salt-38-pepper-set-gray/-/A-84170327", armLink:"https://buy.am/en/products/luxus-haus/salt-and-pepper-grinder-set-joseph-joseph/sw57292"},
+ {id:"bialetti3", demand:"medium", cat:"kitchen", name:"Bialetti Moka Express Black 3-cup", usPrice:37.99, armAMD:25000, profitAMD:10349, usStore:"Target", armStore:"Zigzag", usLink:"https://www.target.com/s/3+cup+bialetti+moka+express", armLink:"https://www.zigzag.am/en/bialetti-moka-express-black-3-cups.html"},
+ {id:"bialetti6", demand:"medium", cat:"kitchen", name:"Bialetti Moka Express Red 6-cup", usPrice:59.99, armAMD:34000, profitAMD:10861, usStore:"Target", armStore:"Zigzag", usLink:"https://www.target.com/p/bialetti-moka-6-cup-express-espresso-maker/-/A-14655160", armLink:"https://www.zigzag.am/en/bialetti-moka-express-black-3-cups.html"},
+ {id:"hrm200", status:"Good", demand:"medium", cat:"sport", name:"Garmin HRM 200 Heart Rate Monitor (M-XL)", usPrice:80.00, armAMD:37000, profitAMD:6146, usStore:"REI", armStore:"garmin.am", usLink:"https://www.rei.com/product/253235/garmin-hrm-200-heart-rate-monitor", armLink:"https://garmin.am/product/2305/hrm-200", note:"Նիշային պարագա Garmin ժամացույցների տերերի համար։ Գնել M-XL չափսը։"},
+ {id:"hrm600", status:"Maybe", demand:"medium", cat:"sport", name:"Garmin HRM 600 Heart Rate Monitor (M-XL)", usPrice:169.99, armAMD:75000, profitAMD:9438, usStore:"Target", armStore:"garmin.am", usLink:"https://www.target.com/p/garmin-hrm-600-heart-rate-monitor-xs-s/-/A-94736566", armLink:"https://garmin.am/product/2461/hrm-600-m-xl", note:"garmin.am-ի գինը մանրածախ է, վերավաճառքը կարող է ավելի ցածր լինել։ $181 կանխիկ է կապված։ Միայն M-XL գնել։"},
+ {id:"avent17", status:"Maybe", demand:"medium", cat:"baby", name:"Philips Avent Natural Response Essentials Gift Set, 17 pc", usPrice:43.99, armAMD:25000, profitAMD:8033, usStore:"Target", armStore:"list.am", usLink:"https://www.target.com/p/phillips-avent-natural-baby-bottle-with-natural-response-nipple-newborn-gift-set-17pc/-/A-89529712", armLink:"https://www.list.am/en/item/21662491", note:"Set: 2× 125 ml + 2× 260 ml Natural Response bottles, 2× Soothie 0-3m + 2× Ultra Soft 0-6m pacifiers, Snuggle holder, milk powder dispenser, bottle brush, 5× microwave sterilizer bags. Listing posted Oct 2024, box closed in photos but shrink-wrap seal not visible, verify set complete before buying."},
+ {id:"beatspro", status:"Good", demand:"high", cat:"electronics", name:"Beats Studio Pro Wireless Noise Cancelling Over-Ear Headphones", usPrice:199.99, armAMD:129000, profitAMD:51870, usStore:"Best Buy", armStore:"Yerevan Mobile", usLink:"https://www.bestbuy.com/product/beats-studio-pro-wireless-noise-cancelling-over-the-ear-headphones-duotone-gray/JJGCQP9KV8/sku/6397387", armLink:"https://www.yerevanmobile.am/en/apple-beats-studio-pro.html"},
+ {id:"psportal", status:"Maybe", demand:"medium", cat:"electronics", name:"PlayStation Portal Remote Player", usPrice:249, armAMD:125000, profitAMD:28970, usStore:"PlayStation Direct", armStore:"Yerevan Mobile", usLink:"https://direct.playstation.com/en-us/buy-accessories/playstation-portal-remote-player", armLink:"https://www.instagram.com/p/DbSvaVQAN3t/"},
+ {id:"instax13", status:"Good", demand:"high", cat:"electronics", name:"Fujifilm Instax Mini 13 Instant Camera", usPrice:89.99, armAMD:50000, profitAMD:15292, usStore:"Target", armStore:"list.am", usLink:"https://www.target.com/p/fujifilm-instax-mini-13-camera-frost-blue/-/A-95004835", armLink:"https://www.list.am/en/item/995170348"},
+ {id:"instaxevo", status:"Maybe", demand:"high", cat:"electronics", name:"Fujifilm Instax Mini Evo Hybrid Instant Camera", usPrice:214.99, armAMD:109900, profitAMD:26981, usStore:"Walmart", armStore:"list.am", usLink:"https://www.walmart.com/ip/FUJIFILM-INSTAX-MINI-EVO-Hybrid-Instant-Camera-Brown/2702000650", armLink:"https://www.list.am/en/item/995161792"},
+ {id:"instaxliplay", status:"Maybe", demand:"medium", cat:"electronics", name:"Fujifilm Instax Mini LiPlay Hybrid Instant Camera", usPrice:199.95, armAMD:88000, profitAMD:10882, usStore:"Best Buy", armStore:"Tapik", usLink:"https://www.bestbuy.com/product/fujifilm-instax-mini-liplay-hybrid-instant-camera-misty-white/J7929VCSP3", armLink:"https://www.instagram.com/p/DVvkVy7DN-Y/"},
+ {id:"airtag4", status:"Maybe", demand:"high", cat:"electronics", name:"Apple AirTag 4-pack (2nd generation)", usPrice:99, armAMD:42000, profitAMD:3815, usStore:"Apple", armStore:"Tapik", usLink:"https://www.apple.com/shop/buy-airtag/airtag/4-pack", armLink:"https://www.instagram.com/p/DacdBE-uybr/"},
+ {id:"nbiron", status:"Good", demand:"medium", cat:"vitamins", name:"Nature's Bounty Gentle Iron 28mg, 90 caps", usPrice:10.45, armAMD:18700, profitAMD:14672, usStore:"Walmart", armStore:"AlfaPharm", usLink:"https://www.walmart.com/ip/Nature-s-Bounty-Gentle-Iron-28-mg-Iron-Glycinate-90ct/48006413", armLink:"https://www.alfapharm.am/products/view/dzhentl-airon-zhelezo-n-eichers-baunti-kaps-28mg-kh-90-38648"},
+ {id:"nbglucosamine", status:"Good", demand:"medium", cat:"vitamins", name:"Nature's Bounty Glucosamine Chondroitin, 110 caps", usPrice:11.97, armAMD:16820, profitAMD:12204, usStore:"Walmart", armStore:"ABAPharm", usLink:"https://www.walmart.com/ip/Nature-s-Bounty-Glucosamine-Chondroitin-Complex-110ct/48006410", armLink:"https://www.abapharm.am/hy/products/000354"},
+ {id:"airtag1", status:"Լավ", demand:"high", cat:"electronics", name:"Apple AirTag (2-րդ սերունդ), 1 հատ", usPrice:23.00, armAMD:17000, profitAMD:8128, usStore:"Best Buy", armStore:"Natural Mobile", usLink:"https://www.bestbuy.com/product/apple-airtag-1-pack-2nd-generation-2026-white/JJGCQLTTHZ/sku/6377585/reviews", armLink:"https://www.list.am/en/item/24116639", note:"Նոր փակ տուփ։"},
+ {id:"beatssolo4", status:"Լավ", demand:"high", cat:"electronics", name:"Beats Solo 4, Matte Black", usPrice:129.99, armAMD:85000, profitAMD:34866, usStore:"Best Buy", armStore:"METASTORE", usLink:"https://www.bestbuy.com/product/beats-solo-4-wireless-on-ear-headphones-matte-black/JJGCQXWKWL/sku/6501020/reviews?feature=Comfort", armLink:"https://www.list.am/en/item/24112697", note:"Նոր փակ տուփ, երաշխիք։"},
+ {id:"djiaction5", status:"Հնարավոր", demand:"medium", cat:"electronics", name:"DJI Osmo Action 5 Pro Standard Combo", usPrice:319.00, armAMD:199900, profitAMD:76865, usStore:"Best Buy", armStore:"Hacop/MiroTech", usLink:"https://www.bestbuy.com/product/dji-osmo-action-5-pro-standard-combo/CZ9GHLFL39", armLink:"https://www.list.am/en/item/22422508", note:"Նոր։"},
+ {id:"whooppeak", status:"Հնարավոր", demand:"medium", cat:"electronics", name:"WHOOP Peak 12-ամսյա բաժանորդագրություն (WHOOP 5.0)", usPrice:239.00, armAMD:109900, profitAMD:17718, usStore:"whoop.com", armStore:"RETRO HOUSE", usLink:"https://www.whoop.com", armLink:"https://www.list.am/en/item/23788862", note:"Նոր փակ տուփ, 1 տարի երաշխիք, բաժանորդագրությունը ներառված։"},
+ {id:"dualsenseedge", status:"Հնարավոր", demand:"high", cat:"electronics", name:"Sony DualSense Edge, White", usPrice:199.99, armAMD:88000, profitAMD:10865, usStore:"Best Buy", armStore:"I Mobo", usLink:"https://www.bestbuy.com/product/sony-interactive-entertainment-dualsense-edge-wireless-controller-for-ps5-pc-mac-mobile-white/JXHQ3CJ4RR/sku/6532912/reviews?page=3", armLink:"https://www.list.am/en/item/995300305", note:"Նոր։"},
+ {id:"ankerprime", status:"Հնարավոր", demand:"medium", cat:"electronics", name:"Anker Prime Charger 100W, 3-Port GaN (A2688)", usPrice:64.99, armAMD:37000, profitAMD:11935, usStore:"Best Buy", armStore:"Erevi", usLink:"https://www.bestbuy.com/product/anker-prime-foldable-usb-c-charger-3-ports-100w-max-compact-wall-charger-silver/JJ858RY6P6/sku/6628897/reviews", armLink:"https://www.list.am/en/item/21135909", note:"Նոր։"},
+ {id:"ultwear", demand:"high", cat:"electronics", name:"Sony ULT WEAR, Black", usPrice:148.00, armAMD:65000, profitAMD:7917, usStore:"Best Buy", armStore:"Armen Vardanyan", usLink:"https://www.bestbuy.com/product/sony-ult-wear-wireless-noise-cancelling-headphones-black/J7XSRH5P56/sku/6576179/reviews?page=4&pageSize=20&sort=BEST_REVIEW", armLink:"https://www.list.am/en/item/995244926", note:"Նոր։ Միայն զեղչով։"}
+];
+
+var qty = {};
+var marks = {};
+var undoStack = [];
+PRODUCTS.forEach(function(p){ qty[p.id]=0; });
+qty["hrm200"]=2; qty["hrm600"]=1; qty["avent17"]=1;
+qty["beatspro"]=2; qty["psportal"]=1; qty["instax13"]=2; qty["instaxevo"]=1; qty["instaxliplay"]=1; qty["airtag4"]=2; qty["nbiron"]=2; qty["nbglucosamine"]=2;
+var state = {sort:"profit", markf:"all", cat:"all", demand:"all"};
+
+function taxPrice(p){ return p.usPrice*TAX; }
+function armUSD(p){ return p.armAMD/RATE; }
+function profit(p){ return armUSD(p)-taxPrice(p); }
+function money(n){ var s = n<0?"-$":"$"; return s + Math.abs(n).toLocaleString("en-US",{minimumFractionDigits:2,maximumFractionDigits:2}); }
+function money0(n){ var s = n<0?"-$":"$"; return s + Math.abs(Math.round(n)).toLocaleString("en-US"); }
+function amd(n){ return n.toLocaleString("en-US")+" դրամ"; }
+function usAMD(p){ return Math.round(Math.round(taxPrice(p)*100)/100*RATE); }
+function profitAMD(p){ return (typeof p.profitAMD==="number") ? p.profitAMD : Math.round(profit(p))*RATE; }
+function amd0(n){ var s = n<0?"-":""; return s + Math.abs(Math.round(n)).toLocaleString("en-US")+" դրամ"; }
+
+var toastTimer = null;
+function showToast(msg){
+  var t = document.getElementById("toast");
+  t.textContent = msg;
+  t.classList.add("show");
+  if(toastTimer) clearTimeout(toastTimer);
+  toastTimer = setTimeout(function(){ t.classList.remove("show"); }, 1600);
+}
+function syncUndoBtn(){ document.getElementById("undoBtn").disabled = !undoStack.length; }
+function setMark(id, m){
+  var cur = marks[id] || null;
+  undoStack.push({id:id, prev:cur});
+  if(cur === m) delete marks[id]; else marks[id] = m;
+  syncUndoBtn();
+  render();
+}
+function undoLast(){
+  var last = undoStack.pop();
+  if(!last) return;
+  if(last.prev) marks[last.id] = last.prev; else delete marks[last.id];
+  syncUndoBtn();
+  render();
+}
+
+function emptyMsg(){
+  if(state.demand!=="all") return "Այդ պահանջարկով ապրանք չկա։";
+  if(state.markf==="like") return "Դեռ ոչինչ չեք հավանել։";
+  if(state.markf==="later") return "«Հետո» նշվածներ չկան։";
+  if(state.markf==="removed") return "Հեռացրածներ չկան։";
+  return "Դատարկ է։";
+}
+
+function render(){
+  var cLike=0, cLater=0, cRem=0;
+  PRODUCTS.forEach(function(p){
+    var m = marks[p.id];
+    if(m==="like") cLike++; else if(m==="later") cLater++; else if(m==="removed") cRem++;
+  });
+  document.getElementById("cntLike").textContent = cLike;
+  document.getElementById("cntLater").textContent = cLater;
+  document.getElementById("cntRem").textContent = cRem;
+  var cHigh=0, cMed=0, cLow=0;
+  PRODUCTS.forEach(function(p){ if(p.demand==="high") cHigh++; else if(p.demand==="medium") cMed++; else if(p.demand==="low") cLow++; });
+  document.getElementById("cntHigh").textContent = cHigh;
+  document.getElementById("cntMed").textContent = cMed;
+  document.getElementById("cntLow").textContent = cLow;
+
+  var catCounts = {};
+  PRODUCTS.forEach(function(p){ catCounts[p.cat] = (catCounts[p.cat]||0)+1; });
+  var catKeys = Object.keys(CATS).filter(function(k){ return catCounts[k]; });
+  PRODUCTS.forEach(function(p){ if(catKeys.indexOf(p.cat)<0 && catCounts[p.cat]) catKeys.push(p.cat); });
+  var catHtml = '<button type="button" class="catbtn'+(state.cat==="all"?" on":"")+'" data-cat="all"><span>Բոլորը</span><span class="cnt">'+PRODUCTS.length+'</span></button>';
+  catKeys.forEach(function(k){
+    catHtml += '<button type="button" class="catbtn'+(state.cat===k?" on":"")+'" data-cat="'+k+'"><span>'+(CATS[k]||k)+'</span><span class="cnt">'+catCounts[k]+'</span></button>';
+  });
+  document.getElementById("catList").innerHTML = catHtml;
+  document.querySelectorAll("[data-cat]").forEach(function(b){ b.addEventListener("click", function(){ state.cat = b.getAttribute("data-cat"); render(); }); });
+
+  var list = PRODUCTS.filter(function(p){
+    if(state.cat!=="all" && p.cat!==state.cat) return false;
+    if(state.demand!=="all" && p.demand!==state.demand) return false;
+    var mk = marks[p.id] || null;
+    if(state.markf==="all"){ if(mk==="removed") return false; }
+    else if(mk!==state.markf) return false;
+    return true;
+  });
+  list.sort(function(a,b){
+    if(state.sort==="profit") return profit(b)-profit(a);
+    if(state.sort==="us") return taxPrice(a)-taxPrice(b);
+    return a.name.localeCompare(b.name);
+  });
+
+  var html = "";
+  if(!list.length){ html = '<div class="empty">'+emptyMsg()+'</div>'; }
+  list.forEach(function(p){
+    var pr = profit(p), tp = taxPrice(p), prA = profitAMD(p);
+    var mk = marks[p.id] || null;
+    var usBtn = p.usLink ? '<a class="us" href="'+p.usLink+'" target="_blank" rel="noopener">'+p.usStore+' ↗</a>' : '<span class="nolink">Հղում չկա</span>';
+    var armBtn = p.armLink ? '<a href="'+p.armLink+'" target="_blank" rel="noopener">'+p.armStore+' ↗</a>' : '<span class="nolink">Հղում չկա</span>';
+    html += '<article class="row'+(mk==="removed"?' removed':'')+'">'
+      + '<div class="top"><img class="thumb" src="assets/'+IMG[p.id]+'" alt="'+p.name+'"><div class="main">'
+      + '<h2 class="name">'+p.name+'</h2>'
+      + '<span class="badge '+p.demand+'">'+DEMAND[p.demand]+'</span>'
+      + (p.status ? ' <span class="badge '+(STATUS_CLASS[p.status]||'')+'">'+p.status+'</span>' : '')
+      + '</div>'
+      + '<div class="profit '+(pr>=0?'pos':'neg')+'">'+amd0(prA)+'<small>ՇԱՀՈՒՅԹ · '+((typeof p.profitAMD==="number")?money(pr):money0(pr))+'</small></div>'
+      + '</div>'
+      + '<div class="prices"><span>ԱՄՆ հարկով՝ <span class="val">'+amd(usAMD(p))+'</span> <span class="usd">'+money(tp)+'</span></span><span>Հայաստան՝ <span class="val">'+amd(p.armAMD)+'</span> <span class="usd">'+money(armUSD(p))+'</span></span></div>'
+      + (p.note ? '<div class="note">'+p.note+'</div>' : '')
+      + '<div class="links">'+usBtn+armBtn+'</div>'
+      + '<div class="actions">'
+      + '<button type="button" class="mbtn'+(mk==="like"?" on-like":"")+'" data-mark="like" data-id="'+p.id+'">✓ Հավանել</button>'
+      + '<button type="button" class="mbtn'+(mk==="later"?" on-later":"")+'" data-mark="later" data-id="'+p.id+'">Հետո</button>'
+      + '<button type="button" class="mbtn'+(mk==="removed"?" on-removed":"")+'" data-mark="removed" data-id="'+p.id+'">✕ Հեռացնել</button>'
+      + '<span class="qty"><button type="button" data-dec="'+p.id+'" aria-label="Հանել մեկ հատ">−</button><span class="n" id="n-'+p.id+'">'+qty[p.id]+'</span><button type="button" data-inc="'+p.id+'" aria-label="Ավելացնել մեկ հատ">+</button></span>'
+      + '</div></article>';
+  });
+  document.getElementById("list").innerHTML = html;
+  document.querySelectorAll("[data-inc]").forEach(function(b){ b.addEventListener("click", function(){ qty[b.getAttribute("data-inc")]++; syncQty(); }); });
+  document.querySelectorAll("[data-dec]").forEach(function(b){ b.addEventListener("click", function(){ var id=b.getAttribute("data-dec"); if(qty[id]>0) qty[id]--; syncQty(); }); });
+  document.querySelectorAll("[data-mark]").forEach(function(b){ b.addEventListener("click", function(){ setMark(b.getAttribute("data-id"), b.getAttribute("data-mark")); }); });
+  syncQty();
+}
+
+function syncQty(){
+  var units=0, cost=0, prof=0, costA=0, profA=0;
+  PRODUCTS.forEach(function(p){
+    var n = qty[p.id]||0;
+    units+=n; cost+=n*taxPrice(p); prof+=n*profit(p); costA+=n*usAMD(p); profA+=n*profitAMD(p);
+    var el=document.getElementById("n-"+p.id); if(el) el.textContent=n;
+  });
+  document.getElementById("bUnits").textContent = units;
+  document.getElementById("bCost").textContent = amd0(costA);
+  document.getElementById("bCostUsd").textContent = money0(cost);
+  document.getElementById("bProfit").textContent = amd0(profA);
+  document.getElementById("bProfitUsd").textContent = money0(prof);
+}
+
+document.getElementById("markPills").addEventListener("click", function(e){
+  var btn = e.target.closest ? e.target.closest("button") : null;
+  if(!btn) return;
+  state.markf = btn.getAttribute("data-markf");
+  this.querySelectorAll(".pill").forEach(function(x){ x.classList.toggle("on", x===btn); });
+  render();
+});
+document.getElementById("sortPills").addEventListener("click", function(e){
+  var btn = e.target.closest ? e.target.closest("button") : null;
+  if(!btn) return;
+  state.sort = btn.getAttribute("data-sort");
+  this.querySelectorAll(".pill").forEach(function(x){ x.classList.toggle("on", x===btn); });
+  render();
+});
+document.getElementById("demandPills").addEventListener("click", function(e){
+  var btn = e.target.closest ? e.target.closest("button") : null;
+  if(!btn) return;
+  state.demand = btn.getAttribute("data-demand");
+  this.querySelectorAll(".pill").forEach(function(x){ x.classList.toggle("on", x===btn); });
+  render();
+});
+document.getElementById("undoBtn").addEventListener("click", undoLast);
+
+render();
+</script>
+</body>
+</html>
