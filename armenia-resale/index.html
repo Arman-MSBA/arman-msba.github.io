@@ -168,6 +168,7 @@ h1{font-size:22px;margin:0 0 12px;font-weight:800;letter-spacing:-.01em}
 .mbtn.on-removed{background:#8f1d15;border-color:#8f1d15;box-shadow:inset 0 0 0 2px rgba(255,255,255,.85)}
 .toast{position:fixed;left:50%;transform:translateX(-50%);bottom:92px;background:var(--ink);color:var(--bg);padding:10px 16px;border-radius:10px;font-size:14px;font-weight:700;opacity:0;pointer-events:none;transition:opacity .2s;z-index:50;max-width:92vw;text-align:center}
 .toast.show{opacity:1}
+.cloudline{font-size:12px;opacity:.75;margin:0 0 6px}
 
 /* Demand proof button + modal */
 .proofbtn{border:1px solid var(--line);background:var(--panel);color:var(--muted);border-radius:999px;padding:4px 10px;font-size:12.5px;font-weight:700;cursor:pointer;font-family:inherit;margin-left:6px;vertical-align:middle}
@@ -206,6 +207,8 @@ h1{font-size:22px;margin:0 0 12px;font-weight:800;letter-spacing:-.01em}
     <button class="undobtnM" id="undoBtnM" type="button" disabled>↩ Հետարկել</button>
     <button class="undobtnM" id="shareBtnM" type="button">🔗 Կիսվել ընտրությամբ</button>
   </div>
+
+  <div class="cloudline" id="cloudStatus">☁️ Ամպից բեռնում…</div>
 
   <div class="bar" id="markPills">
     <button class="pill on" data-markf="all" type="button">Բոլորը</button>
@@ -461,6 +464,80 @@ var marks = loadMarks();
   });
   if(changed) saveMarks(); else syncHash();
 })();
+/* ---- Shared cloud selections: Google Sheet "Selections" tab ----
+   Read: public CSV of the sheet (anyone-with-link reader), fetched on load.
+   Write: Google Form (anonymous) - NOT connected yet. Until the form is
+   wired, CLOUD_FORM_URL stays empty and saves stay local + URL hash.
+   Once Google Forms is connected, set CLOUD_FORM_URL to the formResponse
+   URL and CLOUD_FORM_ENTRIES to the entry IDs for product_id, mark,
+   quantity, updated_by, updated_at; every mark/qty change will also POST
+   there, and a sync job copies form responses into the Selections tab. */
+var CLOUD_CSV_URL = "https://docs.google.com/spreadsheets/d/1TXrnkSOg5wRnvJecEKQ6MD2VIrVA-e2rpPNud3tMlbQ/gviz/tq?tqx=out:csv&sheet=Selections";
+var CLOUD_FORM_URL = "";
+var CLOUD_FORM_ENTRIES = {};
+var cloudLoaded = false;
+function setCloudStatus(txt){ var el=document.getElementById("cloudStatus"); if(el) el.textContent=txt; }
+function parseCloudCSV(text){
+  var rows=[], row=[], cur="", inQ=false;
+  for(var i=0;i<text.length;i++){
+    var c=text[i];
+    if(inQ){
+      if(c==='"'){ if(text[i+1]==='"'){ cur+='"'; i++; } else inQ=false; }
+      else cur+=c;
+    } else if(c==='"'){ inQ=true; }
+    else if(c===","){ row.push(cur); cur=""; }
+    else if(c==="\n"||c==="\r"){ if(c==="\r"&&text[i+1]==="\n") i++; row.push(cur); cur=""; rows.push(row); row=[]; }
+    else cur+=c;
+  }
+  if(cur!==""||row.length){ row.push(cur); rows.push(row); }
+  var out=[];
+  rows.forEach(function(r, idx){
+    if(idx===0) return;
+    if(!r[0]) return;
+    out.push({product_id:(r[0]||"").trim(), mark:(r[1]||"").trim(), quantity:(r[2]||"").trim(), updated_by:(r[3]||"").trim(), updated_at:(r[4]||"").trim()});
+  });
+  return out;
+}
+function applyCloud(rows){
+  var changed=false;
+  rows.forEach(function(r){
+    if(!PRODUCTS.some(function(p){ return p.id===r.product_id; })) return;
+    if(r.mark==="like"||r.mark==="later"||r.mark==="removed"){
+      if(marks[r.product_id]!==r.mark){ marks[r.product_id]=r.mark; changed=true; }
+    }
+    var q=parseInt(r.quantity,10);
+    if(!isNaN(q) && q>=0 && qty[r.product_id]!==q){ qty[r.product_id]=q; changed=true; }
+  });
+  return changed;
+}
+function loadCloud(){
+  setCloudStatus("☁️ Ամպից բեռնում…");
+  fetch(CLOUD_CSV_URL+"&_="+Date.now(), {cache:"no-store"}).then(function(res){
+    if(!res.ok) throw new Error("http "+res.status);
+    return res.text();
+  }).then(function(text){
+    var rows=parseCloudCSV(text);
+    var changed=applyCloud(rows);
+    cloudLoaded=true;
+    if(changed){ saveMarks(); saveQty(); }
+    setCloudStatus(rows.length ? "☁️ Ընդհանուր ընտրությունը բեռնված է" : "☁️ Ընդհանուր ցանկը դեռ դատարկ է");
+    render();
+  }).catch(function(){
+    setCloudStatus("☁️ Ամպը հասանելի չէ, ցույց է տրվում այս հեռախոսի ընտրությունը");
+  });
+}
+function saveCloud(id){
+  if(!CLOUD_FORM_URL || !CLOUD_FORM_ENTRIES.product_id) return;
+  try{
+    var fd=new FormData();
+    fd.append("entry."+CLOUD_FORM_ENTRIES.product_id, id);
+    fd.append("entry."+CLOUD_FORM_ENTRIES.mark, marks[id]||"");
+    fd.append("entry."+CLOUD_FORM_ENTRIES.quantity, String(qty[id]||0));
+    fd.append("entry."+CLOUD_FORM_ENTRIES.updated_by, "web");
+    fd.append("entry."+CLOUD_FORM_ENTRIES.updated_at, new Date().toISOString());
+    fetch(CLOUD_FORM_URL, {method:"POST", mode:"no-cors", body:fd}).catch(function(){});
+  }catch(e){}
+}
 var undoStack = [];
 PRODUCTS.forEach(function(p){ qty[p.id]=0; });
 qty["hrm200"]=2; qty["hrm600"]=1; qty["avent17"]=1;
@@ -519,6 +596,7 @@ function setMark(id, m){
   undoStack.push({id:id, prev:cur});
   if(cur === m) delete marks[id]; else marks[id] = m;
   saveMarks();
+  saveCloud(id);
   syncUndoBtn();
   showToast("Պահպանված է");
   render();
@@ -623,8 +701,8 @@ function render(){
     if(im.complete){ if(im.naturalWidth>0) show(); else fail(); }
     else { im.addEventListener("load", show); im.addEventListener("error", fail); }
   });
-  document.querySelectorAll("[data-inc]").forEach(function(b){ b.addEventListener("click", function(){ qty[b.getAttribute("data-inc")]++; syncQty(); }); });
-  document.querySelectorAll("[data-dec]").forEach(function(b){ b.addEventListener("click", function(){ var id=b.getAttribute("data-dec"); if(qty[id]>0) qty[id]--; syncQty(); }); });
+  document.querySelectorAll("[data-inc]").forEach(function(b){ b.addEventListener("click", function(){ var id=b.getAttribute("data-inc"); qty[id]++; syncQty(); saveCloud(id); }); });
+  document.querySelectorAll("[data-dec]").forEach(function(b){ b.addEventListener("click", function(){ var id=b.getAttribute("data-dec"); if(qty[id]>0) qty[id]--; syncQty(); saveCloud(id); }); });
   document.querySelectorAll("[data-mark]").forEach(function(b){ b.addEventListener("click", function(){ setMark(b.getAttribute("data-id"), b.getAttribute("data-mark")); }); });
   document.querySelectorAll("[data-proof]").forEach(function(b){ b.addEventListener("click", function(){ openProof(b.getAttribute("data-proof")); }); });
   syncQty();
@@ -738,6 +816,7 @@ document.getElementById("proofBack").addEventListener("click", function(e){ if(e
 document.addEventListener("keydown", function(e){ if(e.key==="Escape") closeProof(); });
 
 render();
+loadCloud();
 </script>
 </body>
 </html>
