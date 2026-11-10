@@ -137,6 +137,19 @@ h1{font-size:22px;margin:0 0 12px;font-weight:800;letter-spacing:-.01em}
   .qty{grid-column:1/-1;justify-self:end;margin-left:0}
   .basket .in{gap:10px 18px}
 }
+
+/* Mobile filter dropdowns: hidden on desktop, shown on phones */
+.filters{display:none}
+@media(max-width:640px){
+  .filters{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px;margin:0 0 8px}
+  .fwrap{display:flex;flex-direction:column;gap:2px;min-width:0}
+  .flab{font-size:10.5px;font-weight:800;color:var(--muted);letter-spacing:.03em}
+  .filters select{width:100%;min-height:40px;border:1px solid var(--line);border-radius:10px;background:var(--panel);color:var(--ink);font-size:13.5px;font-weight:700;font-family:inherit;padding:6px 8px;min-width:0}
+  .filters .undobtnM{grid-column:1/-1;min-height:36px;border-radius:10px;border:1px solid var(--line);background:var(--panel);color:var(--ink);font-size:13px;font-weight:800;cursor:pointer;font-family:inherit}
+  .filters .undobtnM:disabled{display:none}
+  /* Chip rows replaced by dropdowns on mobile */
+  .catpanel,#markPills,#demandPills,#sortPills{display:none}
+}
 @media(max-width:520px){
   .thumbwrap{width:54px;height:54px}
 }
@@ -170,6 +183,14 @@ h1{font-size:22px;margin:0 0 12px;font-weight:800;letter-spacing:-.01em}
     <div class="tcell"><span class="tl">Լավ</span><span class="tv good">$5,287.10</span></div>
     <div class="tcell"><span class="tl">Լավ + Հնարավոր</span><span class="tv">$7,569.75</span></div>
     <div class="tcell"><span class="tl">Նպատակ</span><span class="tv">$2,335.14</span></div>
+  </div>
+
+  <div class="filters" id="filters">
+    <label class="fwrap"><span class="flab">Կատեգորիա</span><select id="selCat" aria-label="Կատեգորիա"></select></label>
+    <label class="fwrap"><span class="flab">Նշում</span><select id="selMark" aria-label="Նշում"></select></label>
+    <label class="fwrap"><span class="flab">Պահանջարկ</span><select id="selDemand" aria-label="Պահանջարկ"></select></label>
+    <label class="fwrap"><span class="flab">Դասավորել</span><select id="selSort" aria-label="Դասավորել"><option value="profit">Շահույթ</option><option value="us">Գին</option><option value="name">Անուն</option></select></label>
+    <button class="undobtnM" id="undoBtnM" type="button" disabled>↩ Հետարկել</button>
   </div>
 
   <div class="bar" id="markPills">
@@ -379,7 +400,30 @@ function showToast(msg){
   if(toastTimer) clearTimeout(toastTimer);
   toastTimer = setTimeout(function(){ t.classList.remove("show"); }, 1600);
 }
-function syncUndoBtn(){ document.getElementById("undoBtn").disabled = !undoStack.length; }
+function syncUndoBtn(){ var d = !undoStack.length; document.getElementById("undoBtn").disabled = d; var m = document.getElementById("undoBtnM"); if(m) m.disabled = d; }
+function buildSelects(){
+  var catCounts = {};
+  PRODUCTS.forEach(function(p){ catCounts[p.cat] = (catCounts[p.cat]||0)+1; });
+  var catKeys = Object.keys(CATS).filter(function(k){ return catCounts[k]; });
+  var sel = document.getElementById("selCat");
+  if(sel){
+    var ch = '<option value="all">\u0532\u0578\u056c\u0578\u0580\u0568 ('+PRODUCTS.length+')</option>';
+    catKeys.forEach(function(k){ ch += '<option value="'+k+'">'+(CATS[k]||k)+' ('+catCounts[k]+')</option>'; });
+    sel.innerHTML = ch; sel.value = state.cat;
+  }
+  var cLike=0, cLater=0, cRem=0, cHigh=0, cMed=0, cLow=0;
+  PRODUCTS.forEach(function(p){
+    var m = marks[p.id];
+    if(m==="like") cLike++; else if(m==="later") cLater++; else if(m==="removed") cRem++;
+    if(p.demand==="high") cHigh++; else if(p.demand==="medium") cMed++; else if(p.demand==="low") cLow++;
+  });
+  var sm = document.getElementById("selMark");
+  if(sm){ sm.innerHTML = '<option value="all">\u0532\u0578\u056c\u0578\u0580\u0568</option><option value="like">\u0540\u0561\u057e\u0561\u0576\u0561\u056e ('+cLike+')</option><option value="later">\u0540\u0565\u057f\u0578 ('+cLater+')</option><option value="removed">\u0540\u0565\u057c\u0561\u0581\u0580\u0561\u056e ('+cRem+')</option>'; sm.value = state.markf; }
+  var sd = document.getElementById("selDemand");
+  if(sd){ sd.innerHTML = '<option value="all">\u0532\u0578\u056c\u0578\u0580\u0568</option><option value="high">\u0532\u0561\u0580\u0571\u0580 ('+cHigh+')</option><option value="medium">\u0544\u056b\u057b\u056b\u0576 ('+cMed+')</option><option value="low">\u0551\u0561\u056e\u0580 ('+cLow+')</option>'; sd.value = state.demand; }
+  var ss = document.getElementById("selSort");
+  if(ss) ss.value = state.sort;
+}
 function setMark(id, m){
   var cur = marks[id] || null;
   undoStack.push({id:id, prev:cur});
@@ -404,6 +448,7 @@ function emptyMsg(){
 }
 
 function render(){
+  buildSelects();
   var cLike=0, cLater=0, cRem=0;
   PRODUCTS.forEach(function(p){
     var m = marks[p.id];
@@ -521,6 +566,11 @@ document.getElementById("demandPills").addEventListener("click", function(e){
   render();
 });
 document.getElementById("undoBtn").addEventListener("click", undoLast);
+document.getElementById("undoBtnM").addEventListener("click", undoLast);
+document.getElementById("selCat").addEventListener("change", function(){ state.cat = this.value; render(); });
+document.getElementById("selMark").addEventListener("change", function(){ state.markf = this.value; render(); });
+document.getElementById("selDemand").addEventListener("change", function(){ state.demand = this.value; render(); });
+document.getElementById("selSort").addEventListener("change", function(){ state.sort = this.value; render(); });
 
 render();
 </script>
