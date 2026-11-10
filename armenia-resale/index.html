@@ -91,6 +91,8 @@ h1{font-size:22px;margin:0 0 12px;font-weight:800;letter-spacing:-.01em}
 .mbtn{flex:1;min-height:48px;border-radius:10px;border:1.5px solid var(--line);background:var(--panel2);color:var(--ink);font-size:14.5px;font-weight:800;cursor:pointer;font-family:inherit;padding:8px 4px}
 .mbtn:active{transform:translateY(1px)}
 .mbtn.on-like{background:var(--green);border-color:var(--green);color:#fff}
+.mbtn.btn-like{background:#1a7f37;border-color:#1a7f37;color:#fff}
+.mbtn.btn-remove{background:#cf222e;border-color:#cf222e;color:#fff}
 .mbtn.on-later{background:var(--blue);border-color:var(--blue);color:#fff}
 .mbtn.on-removed{background:var(--red);border-color:var(--red);color:#fff}
 @media (prefers-color-scheme: dark){.mbtn.on-like,.mbtn.on-later,.mbtn.on-removed{color:#101511}}
@@ -417,9 +419,9 @@ function render(){
       + (p.note ? '<div class="note">'+p.note+'</div>' : '')
       + '<div class="links">'+usBtn+armBtn+'</div>'
       + '<div class="actions">'
-      + '<button type="button" class="mbtn'+(mk==="like"?" on-like":"")+'" data-mark="like" data-id="'+p.id+'">✓ Հավանել</button>'
+      + '<button type="button" class="mbtn btn-like'+(mk==="like"?" on-like":"")+'" data-mark="like" data-id="'+p.id+'">✓ Հավանել</button>'
       + '<button type="button" class="mbtn'+(mk==="later"?" on-later":"")+'" data-mark="later" data-id="'+p.id+'">Հետո</button>'
-      + '<button type="button" class="mbtn'+(mk==="removed"?" on-removed":"")+'" data-mark="removed" data-id="'+p.id+'">✕ Հեռացնել</button>'
+      + '<button type="button" class="mbtn btn-remove'+(mk==="removed"?" on-removed":"")+'" data-mark="removed" data-id="'+p.id+'">✕ Հեռացնել</button>'
       + '<span class="qty"><button type="button" data-dec="'+p.id+'" aria-label="Հանել մեկ հատ">−</button><span class="n" id="n-'+p.id+'">'+qty[p.id]+'</span><button type="button" data-inc="'+p.id+'" aria-label="Ավելացնել մեկ հատ">+</button></span>'
       + '</div></article>';
   });
